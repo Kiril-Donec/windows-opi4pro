@@ -54,7 +54,7 @@ Windows runs in **test mode** (a watermark in the corner), because the A733 driv
 ![Installer window](docs/installer-progress-en.png)
 
 1. Download **`A733-Windows-Installer.exe`** from
-   [Releases](https://github.com/Kiril-Donec/opi4pro-a733-windows/releases/latest).
+   [Releases](https://github.com/Kiril-Donec/windows-opi4pro/releases/latest).
    It is one file (~2.5 MB) with the firmware and drivers inside; it needs nothing else installed.
 2. Insert the SD card into the PC.
 3. Run the exe and allow administrator access. The exe is not code-signed, so Windows SmartScreen may

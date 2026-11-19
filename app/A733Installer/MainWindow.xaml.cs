@@ -83,6 +83,7 @@ namespace A733Installer
             };
             Closing += OnClosing;
             ApplyLang();
+            LangThumbX.X = lang == "en" ? 0 : 38;   // initial position, no slide
             UpdateStart();
         }
 
@@ -93,9 +94,7 @@ namespace A733Installer
             HeadTitle.Text = T("Title");
             SubTitle.Text = string.Format(T("Sub"), App.Version);
             Badge.Text = T("Badge");
-            Anim.SlideX(LangThumbX, lang == "en" ? 0 : 38);
             LangEn.Foreground = lang == "en" ? Accent : Brushes.White;
-
             LangRu.Foreground = lang == "ru" ? Accent : Brushes.White;
             WarnBold.Text = T("WarnBold"); WarnRest.Text = T("WarnRest");
             S1Title.Text = T("S1Title"); S1Hint.Text = T("S1Hint"); RefreshBtn.Content = T("Refresh");

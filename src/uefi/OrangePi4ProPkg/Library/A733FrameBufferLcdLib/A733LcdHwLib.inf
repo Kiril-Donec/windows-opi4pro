@@ -1,0 +1,17 @@
+[Defines]
+  INF_VERSION = 1.37
+  BASE_NAME = A733LcdHwLib
+  FILE_GUID = 132342a1-579d-41ae-a7e3-a733474f5041
+  MODULE_TYPE = BASE
+  VERSION_STRING = 1.0
+  LIBRARY_CLASS = LcdHwLib|DXE_DRIVER
+[Sources]
+  A733LcdHwLib.c
+[Packages]
+  ArmPlatformPkg/ArmPlatformPkg.dec
+  MdePkg/MdePkg.dec
+  Platform/OrangePi/OrangePi4ProPkg/OrangePi4ProPkg.dec
+[LibraryClasses]
+  DebugLib
+[FixedPcd]
+  gOrangePi4ProTokenSpaceGuid.PcdFrameBufferBase

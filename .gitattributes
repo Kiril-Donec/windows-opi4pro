@@ -1,0 +1,12 @@
+* text=auto
+*.cmd text eol=crlf
+*.ini text eol=crlf
+*.ps1 text eol=crlf
+*.inf text eol=crlf
+*.sh text eol=lf
+# U-Boot scripts (not Windows batch files)
+src/uefi/**/*.cmd text eol=lf
+*.gz binary
+*.sys binary
+*.cat binary
+*.cer binary

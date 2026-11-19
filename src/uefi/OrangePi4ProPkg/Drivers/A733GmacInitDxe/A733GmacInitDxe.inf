@@ -1,0 +1,28 @@
+[Defines]
+  INF_VERSION                    = 1.37
+  BASE_NAME                      = A733GmacInitDxe
+  FILE_GUID                      = a7330040-4f50-474d-4143-524541445900
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = A733GmacInitEntryPoint
+
+[Sources]
+  A733GmacInitDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  Platform/OrangePi/OrangePi4ProPkg/OrangePi4ProPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  DebugLib
+  IoLib
+  TimerLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+
+[Protocols]
+  gA733GmacReadyProtocolGuid
+
+[Depex]
+  TRUE

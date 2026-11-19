@@ -1,0 +1,44 @@
+/*
+ * Orange Pi 4 Pro A733 DSDT bring-up draft.
+ * NOT compiled or installed in UEFI v1. Device HIDs are provisional until
+ * the matching Windows drivers are assigned.
+ */
+DefinitionBlock ("", "DSDT", 2, "OPI4P", "A733V001", 0x00000001)
+{
+    Scope (_SB)
+    {
+        Device (COM0)
+        {
+            Name (_HID, "ARMH0011")
+            Name (_UID, Zero)
+            Name (_CRS, ResourceTemplate ()
+            {
+                Memory32Fixed (ReadWrite, 0x02500000, 0x00000400)
+            })
+        }
+
+        Device (MMC0)
+        {
+            Name (_HID, "AWIN0001") // provisional A733 SD host ID
+            Name (_UID, Zero)
+            Name (_CCA, One)
+            Name (_CRS, ResourceTemplate ()
+            {
+                Memory32Fixed (ReadWrite, 0x04020000, 0x00001000)
+                Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 193 }
+            })
+        }
+
+        Device (USB1)
+        {
+            Name (_HID, "PNP0D20")
+            Name (_UID, One)
+            Name (_CCA, One)
+            Name (_CRS, ResourceTemplate ()
+            {
+                Memory32Fixed (ReadWrite, 0x04200000, 0x00001000)
+                Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 191 }
+            })
+        }
+    }
+}

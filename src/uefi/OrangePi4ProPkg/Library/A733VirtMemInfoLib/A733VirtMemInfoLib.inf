@@ -1,0 +1,37 @@
+[Defines]
+  INF_VERSION                    = 1.37
+  BASE_NAME                      = A733VirtMemInfoLib
+  FILE_GUID                      = f4e975d9-5160-4f90-89c6-a7334d454d49
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = ArmVirtMemInfoLib
+  CONSTRUCTOR                    = A733VirtMemInfoLibConstructor
+
+[Sources]
+  A733VirtMemInfoLib.c
+
+[Packages]
+  ArmPkg/ArmPkg.dec
+  ArmVirtPkg/ArmVirtPkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  MdePkg/MdePkg.dec
+  Platform/OrangePi/OrangePi4ProPkg/OrangePi4ProPkg.dec
+
+[LibraryClasses]
+  BaseMemoryLib
+  DebugLib
+  HobLib
+  MemoryAllocationLib
+
+[Guids]
+  gArmVirtSystemMemorySizeGuid
+
+[Pcd]
+  gArmTokenSpaceGuid.PcdFdBaseAddress
+  gArmTokenSpaceGuid.PcdSystemMemoryBase
+  gArmTokenSpaceGuid.PcdSystemMemorySize
+
+[FixedPcd]
+  gArmTokenSpaceGuid.PcdFvSize
+  gOrangePi4ProTokenSpaceGuid.PcdFrameBufferBase
+  gOrangePi4ProTokenSpaceGuid.PcdFrameBufferSize

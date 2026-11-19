@@ -1,0 +1,24 @@
+[Defines]
+  INF_VERSION = 1.37
+  BASE_NAME = A733UsbInitDxe
+  FILE_GUID = d0a7e1c2-431c-42b2-b4ef-a73355534231
+  MODULE_TYPE = DXE_DRIVER
+  VERSION_STRING = 1.0
+  ENTRY_POINT = A733UsbInitEntryPoint
+[Sources]
+  A733UsbInitDxe.c
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  Platform/OrangePi/OrangePi4ProPkg/OrangePi4ProPkg.dec
+[LibraryClasses]
+  ArmLib
+  DebugLib
+  IoLib
+  NonDiscoverableDeviceRegistrationLib
+  TimerLib
+  UefiDriverEntryPoint
+[FixedPcd]
+  gOrangePi4ProTokenSpaceGuid.PcdEhci1Base
+[Depex]
+  TRUE

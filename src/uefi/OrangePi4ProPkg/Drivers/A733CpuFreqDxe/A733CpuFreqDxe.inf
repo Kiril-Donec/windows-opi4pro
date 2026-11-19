@@ -1,0 +1,29 @@
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = A733CpuFreqDxe
+  FILE_GUID                      = A7330060-4350-4651-5245-514458454400
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = A733CpuFreqDxeEntryPoint
+
+[Sources]
+  A733CpuFreqDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  Platform/OrangePi/OrangePi4ProPkg/OrangePi4ProPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  DebugLib
+  IoLib
+  PcdLib
+  TimerLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+
+[FixedPcd]
+  gOrangePi4ProTokenSpaceGuid.PcdA733CpuFreqLevel
+
+[Depex]
+  TRUE

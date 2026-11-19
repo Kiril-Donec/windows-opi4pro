@@ -1,0 +1,30 @@
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = A733SdMmcDxe
+  FILE_GUID                      = A7330061-5344-4D4D-4330-040200000000
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = A733SdMmcDxeEntryPoint
+
+[Sources]
+  A733SdMmcDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  IoLib
+  MemoryAllocationLib
+  TimerLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+
+[Protocols]
+  gEfiBlockIoProtocolGuid
+  gEfiDevicePathProtocolGuid
+
+[Depex]
+  TRUE

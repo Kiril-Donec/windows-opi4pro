@@ -1,0 +1,24 @@
+[Defines]
+  INF_VERSION = 1.37
+  BASE_NAME = A733LcdPlatformLib
+  FILE_GUID = 132342a1-579d-41ae-a7e3-a733474f5042
+  MODULE_TYPE = BASE
+  VERSION_STRING = 1.0
+  LIBRARY_CLASS = LcdPlatformLib|DXE_DRIVER
+[Sources]
+  A733LcdPlatformLib.c
+[Packages]
+  ArmPlatformPkg/ArmPlatformPkg.dec
+  MdePkg/MdePkg.dec
+  Platform/OrangePi/OrangePi4ProPkg/OrangePi4ProPkg.dec
+[LibraryClasses]
+  BaseMemoryLib
+  DebugLib
+  IoLib
+  PcdLib
+[FixedPcd]
+  gOrangePi4ProTokenSpaceGuid.PcdFrameBufferBase
+  gOrangePi4ProTokenSpaceGuid.PcdFrameBufferSize
+  gOrangePi4ProTokenSpaceGuid.PcdFrameBufferWidth
+  gOrangePi4ProTokenSpaceGuid.PcdFrameBufferHeight
+  gOrangePi4ProTokenSpaceGuid.PcdFrameBufferStride

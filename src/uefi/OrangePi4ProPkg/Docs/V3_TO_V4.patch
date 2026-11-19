@@ -1,0 +1,178 @@
+diff -ruN /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/Docs/V4_FRAMEBUFFER_FIX.md /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/Docs/V4_FRAMEBUFFER_FIX.md
+--- /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/Docs/V4_FRAMEBUFFER_FIX.md	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/Docs/V4_FRAMEBUFFER_FIX.md	2026-07-29 10:17:44.017902719 +0000
+@@ -0,0 +1,34 @@
++# Orange Pi 4 Pro EDK2 v4 framebuffer coherence fix
++
++## Physical symptom
++
++V3 reached `UEFI Interactive Shell v2.2` and the `Shell>` prompt, but HDMI
++showed fragmented glyphs and stale horizontal pieces while UART text was
++correct.
++
++## Root cause
++
++The active vendor framebuffer at `0xBBF11000` is inside LPDDR5. The initial
++A733 virtual-memory table mapped all LPDDR5 as write-back cacheable RAM. The
++sunxi display engine scans that memory without hardware CPU-cache coherence,
++while the stock EDK2 `LcdGraphicsOutputDxe` writes pixels with normal memory
++stores and does not clean the AArch64 data cache after every GOP BLT.
++
++## Fix
++
++V4 installs a later, page-aligned MMU descriptor for exactly
++`0xBBF11000..0xBC169000` (`0x258000` bytes) using
++`ARM_MEMORY_REGION_ATTRIBUTE_UNCACHED_UNBUFFERED`. The remaining 4 GiB RAM
++stays write-back cacheable. This trades framebuffer write speed for reliable
++scan-out and avoids modifying the generic EDK2 GOP driver.
++
++V4 keeps the compact Shell command set so the firmware still fits the fixed
++4 MiB image. The optional `map` command therefore remains absent. V4 does
++replace invalid boot discovery policy `0x3F` with the standard
++`BDP_CONNECT_ALL` value `2`.
++
++## Still open
++
++The A733 EHCI host controller still fails the generic EDK2 reset/start path.
++That is independent from HDMI coherence and remains a later hardware-driver
++milestone.
+diff -ruN /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/Library/A733VirtMemInfoLib/A733VirtMemInfoLib.c /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/Library/A733VirtMemInfoLib/A733VirtMemInfoLib.c
+--- /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/Library/A733VirtMemInfoLib/A733VirtMemInfoLib.c	2026-07-29 01:01:45.000000000 +0000
++++ /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/Library/A733VirtMemInfoLib/A733VirtMemInfoLib.c	2026-07-29 10:14:32.621896435 +0000
+@@ -49,5 +49,23 @@
+   Table[3].Length       = FixedPcdGet32 (PcdFvSize) + 0x8000;
+   Table[3].Attributes   = ARM_MEMORY_REGION_ATTRIBUTE_WRITE_BACK_RO;
+ 
++  // The HDMI display engine is not cache-coherent with the CPU.  The broad
++  // LPDDR5 descriptor above maps this range as write-back RAM, which leaves
++  // freshly rendered glyphs in CPU cache lines and produces torn/fragmented
++  // text on HDMI.  This later descriptor deliberately overrides the active
++  // scan-out buffer with an uncached mapping.  It is slower than write-back,
++  // but deterministic and correct for the first hardware port.
++  Table[4].PhysicalBase = FixedPcdGet64 (PcdFrameBufferBase);
++  Table[4].VirtualBase  = Table[4].PhysicalBase;
++  Table[4].Length       = FixedPcdGet32 (PcdFrameBufferSize);
++  Table[4].Attributes   = ARM_MEMORY_REGION_ATTRIBUTE_UNCACHED_UNBUFFERED;
++
++  DEBUG ((
++    DEBUG_INFO,
++    "A733 MMU: framebuffer %lx..%lx mapped UNCACHED\n",
++    Table[4].PhysicalBase,
++    Table[4].PhysicalBase + Table[4].Length
++    ));
++
+   *VirtualMemoryMap = Table;
+ }
+diff -ruN /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/Library/A733VirtMemInfoLib/A733VirtMemInfoLib.inf /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/Library/A733VirtMemInfoLib/A733VirtMemInfoLib.inf
+--- /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/Library/A733VirtMemInfoLib/A733VirtMemInfoLib.inf	2026-07-29 00:47:28.000000000 +0000
++++ /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/Library/A733VirtMemInfoLib/A733VirtMemInfoLib.inf	2026-07-29 10:15:00.037897336 +0000
+@@ -33,3 +33,5 @@
+ 
+ [FixedPcd]
+   gArmTokenSpaceGuid.PcdFvSize
++  gOrangePi4ProTokenSpaceGuid.PcdFrameBufferBase
++  gOrangePi4ProTokenSpaceGuid.PcdFrameBufferSize
+diff -ruN /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/OrangePi4Pro.dsc /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/OrangePi4Pro.dsc
+--- /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/OrangePi4Pro.dsc	2026-07-29 09:10:55.000000000 +0000
++++ /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/OrangePi4Pro.dsc	2026-07-29 10:17:44.017902719 +0000
+@@ -1,7 +1,7 @@
+ [Defines]
+   PLATFORM_NAME                  = OrangePi4ProA733
+   PLATFORM_GUID                  = 96cd27b7-00fe-49aa-8d12-c089ef762733
+-  PLATFORM_VERSION               = 3.0
++  PLATFORM_VERSION               = 4.0
+   DSC_SPECIFICATION              = 0x0001001B
+   OUTPUT_DIRECTORY               = Build/OrangePi4Pro-AARCH64
+   SUPPORTED_ARCHITECTURES        = AARCH64
+@@ -58,7 +58,7 @@
+ 
+ [PcdsFixedAtBuild.common]
+   gArmTokenSpaceGuid.PcdUefiShellDefaultBootEnable|TRUE
+-  gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString|L"Orange Pi 4 Pro A733 EDK2 v3 Shell fix"
++  gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString|L"Orange Pi 4 Pro A733 EDK2 v4 framebuffer fix"
+   gArmPlatformTokenSpaceGuid.PcdCPUCorePrimaryStackSize|0x00010000
+   gArmPlatformTokenSpaceGuid.PcdSystemMemoryUefiRegionSize|0x04000000
+   gEmbeddedTokenSpaceGuid.PcdPrePiCpuIoSize|16
+@@ -120,7 +120,7 @@
+   gEfiMdeModulePkgTokenSpaceGuid.PcdSetupVideoVerticalResolution|600
+   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutRow|0
+   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutColumn|0
+-  gEfiMdeModulePkgTokenSpaceGuid.PcdBootDiscoveryPolicy|0x3F
++  gEfiMdeModulePkgTokenSpaceGuid.PcdBootDiscoveryPolicy|2
+   gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvModeEnable|TRUE
+   gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|5
+ 
+diff -ruN /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/PrePi/ModuleEntryPoint.S /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/PrePi/ModuleEntryPoint.S
+--- /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/PrePi/ModuleEntryPoint.S	2026-07-29 09:10:55.000000000 +0000
++++ /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/PrePi/ModuleEntryPoint.S	2026-07-29 10:14:32.621896435 +0000
+@@ -50,4 +50,4 @@
+   .section .rodata
+   .balign 4
+ A733EarlyMessage:
+-  .asciz "\r\n[A733 EDK2 v3] SEC entered at 0x41000000\r\n"
++  .asciz "\r\n[A733 EDK2 v4] SEC entered at 0x41000000\r\n"
+diff -ruN /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/README.md /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/README.md
+--- /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/README.md	2026-07-29 07:21:58.000000000 +0000
++++ /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/README.md	2026-07-29 10:17:44.017902719 +0000
+@@ -71,3 +71,7 @@
+ After that, EDK2 DEBUG messages should appear as PrePi creates HOBs and enters
+ DXE. HDMI should remain at 1024×600 and eventually display the EDK2 console or
+ Shell. See `Docs/TESTING.md` for recovery and checkpoints.
++
++## v4 hardware update
++
++The active HDMI framebuffer is mapped uncached to keep CPU rendering coherent with the non-coherent sunxi display scan-out.
+diff -ruN /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/Tools/boot_v4.cmd /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/Tools/boot_v4.cmd
+--- /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/Tools/boot_v4.cmd	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/Tools/boot_v4.cmd	2026-07-29 10:14:32.621896435 +0000
+@@ -0,0 +1,12 @@
++echo Orange Pi 4 Pro A733 EDK2 v4 framebuffer fix
++echo Framebuffer mapped uncached for coherent HDMI scanout
++screen_char
++setenv stdout serial,vidconsole
++setenv stderr serial,vidconsole
++echo HDMI inherited from vendor bootloader
++ext4load mmc 0:1 0x41000000 /uefi_stage0.uimg
++ext4load mmc 0:1 0x43000000 /dtb/allwinner/sun60i-a733-orangepi-4-pro.dtb
++echo Starting EDK2 v4 through vendor bootm and BL31...
++bootm 0x41000000 - 0x43000000
++echo ERROR: EDK2 v4 returned
++while true; do sleep 1; done
+diff -ruN /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/Tools/make_flashable_image.sh /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/Tools/make_flashable_image.sh
+--- /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/Tools/make_flashable_image.sh	2026-07-29 09:10:55.000000000 +0000
++++ /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/Tools/make_flashable_image.sh	2026-07-29 10:14:32.621896435 +0000
+@@ -14,8 +14,8 @@
+ trap 'rm -rf "$TMP"' EXIT
+ cc -O2 -Wall -Wextra "$HERE/ext4_replace.c" -o "$TMP/ext4_replace" -lext2fs -lcom_err
+ cc -O2 -Wall -Wextra "$HERE/ext4_extract.c" -o "$TMP/ext4_extract" -lext2fs -lcom_err
+-python3 "$HERE/mk_legacy_uimage.py" "$FD" "$TMP/uefi.uimg" --name "Orange Pi 4 Pro EDK2 v3 ${FLAVOR}"
+-python3 "$HERE/mk_boot_script_uimage.py" "$HERE/boot_v3.cmd" "$TMP/boot.scr" --name "OPi4Pro EDK2 v3 boot"
++python3 "$HERE/mk_legacy_uimage.py" "$FD" "$TMP/uefi.uimg" --name "Orange Pi 4 Pro EDK2 v4 ${FLAVOR}"
++python3 "$HERE/mk_boot_script_uimage.py" "$HERE/boot_v4.cmd" "$TMP/boot.scr" --name "OPi4Pro EDK2 v4 boot"
+ cp "$BASE" "$OUT"
+ # Stage0 v13 MBR partition 1: LBA 65536, 65536 sectors (32 MiB ext4).
+ dd if="$OUT" of="$TMP/root.ext4" bs=512 skip=65536 count=65536 status=none
+diff -ruN /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/Tools/mk_boot_script_uimage.py /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/Tools/mk_boot_script_uimage.py
+--- /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/Tools/mk_boot_script_uimage.py	2026-07-29 09:10:55.000000000 +0000
++++ /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/Tools/mk_boot_script_uimage.py	2026-07-29 10:14:32.621896435 +0000
+@@ -5,7 +5,7 @@
+ from pathlib import Path
+ MAGIC=0x27051956; HEADER=struct.Struct('>7I4B32s')
+ def crc32(b: bytes)->int: return binascii.crc32(b)&0xffffffff
+-p=argparse.ArgumentParser(); p.add_argument('input',type=Path); p.add_argument('output',type=Path); p.add_argument('--name',default='OPi4Pro EDK2 v3 boot'); a=p.parse_args()
++p=argparse.ArgumentParser(); p.add_argument('input',type=Path); p.add_argument('output',type=Path); p.add_argument('--name',default='OPi4Pro EDK2 v4 boot'); a=p.parse_args()
+ script=a.input.read_bytes()
+ # Legacy script payload starts with total length and zero, matching the vendor image.
+ payload=struct.pack('>II',len(script),0)+script
+diff -ruN /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/Tools/mk_legacy_uimage.py /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/Tools/mk_legacy_uimage.py
+--- /tmp/opi-v3-reference/Platform/OrangePi/OrangePi4ProPkg/Tools/mk_legacy_uimage.py	2026-07-29 09:10:55.000000000 +0000
++++ /mnt/data/opi4pro-uefi-v4/work/Platform/OrangePi/OrangePi4ProPkg/Tools/mk_legacy_uimage.py	2026-07-29 10:14:32.621896435 +0000
+@@ -64,7 +64,7 @@
+     parser.add_argument("output", type=Path, help="output .uimg")
+     parser.add_argument("--load", type=lambda v: int(v, 0), default=0x41000000)
+     parser.add_argument("--entry", type=lambda v: int(v, 0), default=0x41000000)
+-    parser.add_argument("--name", default="Orange Pi 4 Pro EDK2 v3")
++    parser.add_argument("--name", default="Orange Pi 4 Pro EDK2 v4")
+     parser.add_argument("--timestamp", type=int, default=None)
+     args = parser.parse_args()
+ 

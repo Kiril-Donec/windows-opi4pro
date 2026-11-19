@@ -1,0 +1,29 @@
+[Defines]
+  INF_VERSION                    = 1.37
+  BASE_NAME                      = A733PlatformPeiLib
+  FILE_GUID                      = a24fc1c5-52df-4bad-88da-a7335045494c
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = PlatformPeiLib
+
+[Sources]
+  A733PlatformPeiLib.c
+
+[Packages]
+  ArmPkg/ArmPkg.dec
+  ArmVirtPkg/ArmVirtPkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  MdePkg/MdePkg.dec
+  Platform/OrangePi/OrangePi4ProPkg/OrangePi4ProPkg.dec
+
+[LibraryClasses]
+  DebugLib
+  HobLib
+
+[FixedPcd]
+  gArmTokenSpaceGuid.PcdFvSize
+  gOrangePi4ProTokenSpaceGuid.PcdFrameBufferBase
+  gOrangePi4ProTokenSpaceGuid.PcdFrameBufferSize
+
+[Pcd]
+  gArmTokenSpaceGuid.PcdFvBaseAddress

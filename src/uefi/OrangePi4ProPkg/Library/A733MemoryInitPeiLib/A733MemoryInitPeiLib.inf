@@ -1,0 +1,55 @@
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = A733MemoryInitPeiLib
+  FILE_GUID                      = 1d6a7330-6420-4b38-9d32-a733444d4136
+  MODULE_TYPE                    = SEC
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = MemoryInitPeiLib
+
+[Sources]
+  A733MemoryInitPeiLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  ArmPkg/ArmPkg.dec
+  ArmPlatformPkg/ArmPlatformPkg.dec
+  ArmVirtPkg/ArmVirtPkg.dec
+  UefiCpuPkg/UefiCpuPkg.dec
+
+[LibraryClasses]
+  DebugLib
+  HobLib
+  ArmLib
+  ArmMmuLib
+  ArmVirtMemInfoLib
+  CacheMaintenanceLib
+
+[Guids]
+  gArmVirtSystemMemorySizeGuid
+  gEfiMemoryTypeInformationGuid
+
+[FeaturePcd]
+  gEmbeddedTokenSpaceGuid.PcdPrePiProduceMemoryTypeInformationHob
+
+[FixedPcd]
+  gArmTokenSpaceGuid.PcdFdSize
+  gArmPlatformTokenSpaceGuid.PcdSystemMemoryUefiRegionSize
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiACPIReclaimMemory
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiACPIMemoryNVS
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiReservedMemoryType
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesData
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesCode
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiBootServicesCode
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiBootServicesData
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiLoaderCode
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiLoaderData
+
+[Pcd]
+  gArmTokenSpaceGuid.PcdSystemMemoryBase
+  gArmTokenSpaceGuid.PcdSystemMemorySize
+  gArmTokenSpaceGuid.PcdFdBaseAddress
+
+[Depex]
+  TRUE

@@ -1,0 +1,14 @@
+#pragma once
+
+typedef struct _GMAC_ADAPTER GMAC_ADAPTER;
+
+typedef struct _GMAC_DEVICE {
+    GMAC_ADAPTER *Adapter;
+} GMAC_DEVICE;
+
+WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(GMAC_DEVICE, GmacGetDeviceContext);
+
+EVT_WDF_DEVICE_PREPARE_HARDWARE GmacEvtPrepareHardware;
+EVT_WDF_DEVICE_RELEASE_HARDWARE GmacEvtReleaseHardware;
+EVT_WDF_DEVICE_D0_ENTRY GmacEvtD0Entry;
+EVT_WDF_DEVICE_D0_EXIT GmacEvtD0Exit;

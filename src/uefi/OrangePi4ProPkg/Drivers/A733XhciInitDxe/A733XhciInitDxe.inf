@@ -1,0 +1,41 @@
+[Defines]
+  INF_VERSION                    = 1.37
+  BASE_NAME                      = A733XhciInitDxe
+  FILE_GUID                      = 34f7fcf1-367b-4d4f-a733-060a00000030
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = A733XhciInitEntryPoint
+
+[Sources]
+  A733XhciInitDxe.c
+  A733XhciPlatform.c
+  A733XhciPlatform.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  Platform/OrangePi/OrangePi4ProPkg/OrangePi4ProPkg.dec
+
+[LibraryClasses]
+  DebugLib
+  IoLib
+  NonDiscoverableDeviceRegistrationLib
+  PcdLib
+  TimerLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+
+[Guids]
+  gEfiEventReadyToBootGuid
+  gEfiEventExitBootServicesGuid
+
+[Protocols]
+  gA733XhciReadyProtocolGuid
+  gEfiUsb2HcProtocolGuid
+  gEfiSimplePointerProtocolGuid
+
+[FixedPcd]
+  gOrangePi4ProTokenSpaceGuid.PcdA733UsbBridgeClockMode
+
+[Depex]
+  TRUE

@@ -1,0 +1,42 @@
+<Project DefaultTargets="Build" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64"><Configuration>Debug</Configuration><Platform>ARM64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64"><Configuration>Release</Configuration><Platform>ARM64</Platform></ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8E9AB1F6-0D1B-4F20-A733-000000000056}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>A733SdMmc</RootNamespace>
+    <!-- Use the installed matching SDK/WDK by default. Override
+         /p:WindowsTargetPlatformVersion=10.0.xxxxx.0 if required. -->
+    <A733TraceBringup Condition="'$(A733TraceBringup)'==''">1</A733TraceBringup>
+    <A733EnableHighSpeed Condition="'$(A733EnableHighSpeed)'==''">0</A733EnableHighSpeed>
+    <A733RequireSdhf Condition="'$(A733RequireSdhf)'==''">0</A733RequireSdhf>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+    <ConfigurationType>Driver</ConfigurationType><TargetVersion>Windows10</TargetVersion><DriverTargetPlatform>Desktop</DriverTargetPlatform><DriverType>WDM</DriverType><UseDebugLibraries>true</UseDebugLibraries><PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset><SignMode>Off</SignMode>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+    <ConfigurationType>Driver</ConfigurationType><TargetVersion>Windows10</TargetVersion><DriverTargetPlatform>Desktop</DriverTargetPlatform><DriverType>WDM</DriverType><UseDebugLibraries>false</UseDebugLibraries><PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset><SignMode>Off</SignMode>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ItemDefinitionGroup>
+    <ClCompile><WarningLevel>Level4</WarningLevel><TreatWarningAsError>true</TreatWarningAsError><PreprocessorDefinitions>A733_TRACE_BRINGUP=$(A733TraceBringup);A733_ENABLE_HIGH_SPEED=$(A733EnableHighSpeed);A733_REQUIRE_SDHF=$(A733RequireSdhf);_ARM64_;%(PreprocessorDefinitions)</PreprocessorDefinitions></ClCompile>
+    <Link><EntryPointSymbol>DriverEntry</EntryPointSymbol><AdditionalDependencies>%(AdditionalDependencies);$(DDK_LIB_PATH)\sdport.lib;$(DDK_LIB_PATH)\ntoskrnl.lib</AdditionalDependencies></Link>
+  </ItemDefinitionGroup>
+  <PropertyGroup><SkipPackageVerification>false</SkipPackageVerification></PropertyGroup>
+  <ItemGroup>
+    <ClCompile Include="driver.c" />
+    <ClCompile Include="smhc_hw.c" />
+    <ClCompile Include="smhc_request.c" />
+    <ClCompile Include="handoff_acpi.c" />
+    <Inf Include="A733SdMmc.inf">
+      <DateStamp>10/23/2026</DateStamp>
+      <TimeStamp>2.5.0.602</TimeStamp>
+    </Inf>
+    <FilesToPackage Include="$(TargetPath)" />
+  </ItemGroup>
+  <ItemGroup><ClInclude Include="A733SdMmc.h" /></ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

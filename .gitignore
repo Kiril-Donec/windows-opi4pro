@@ -1,0 +1,8 @@
+logs/
+src/uefi/out/
+src/drivers/*/ARM64/
+src/drivers/*/x64/
+src/drivers/*/package-*/
+src/drivers/*/*.zip
+*.pfx
+*.binlog

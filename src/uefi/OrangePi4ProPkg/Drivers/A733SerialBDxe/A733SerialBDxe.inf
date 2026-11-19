@@ -1,0 +1,31 @@
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = A733SerialBDxe
+  FILE_GUID                      = A7330062-5541-5254-3600-000000000006
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = A733SerialBDxeEntryPoint
+
+[Sources]
+  A733SerialBDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  Platform/OrangePi/OrangePi4ProPkg/OrangePi4ProPkg.dec
+
+[LibraryClasses]
+  DebugLib
+  IoLib
+  PcdLib
+  TimerLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+
+[Guids]
+  gEfiEventReadyToBootGuid
+
+[FixedPcd]
+  gOrangePi4ProTokenSpaceGuid.PcdA733SerialBBaudRate
+
+[Depex]
+  TRUE

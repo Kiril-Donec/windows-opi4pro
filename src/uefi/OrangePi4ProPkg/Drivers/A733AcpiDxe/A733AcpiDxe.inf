@@ -1,0 +1,49 @@
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = A733AcpiDxe
+  FILE_GUID                      = A733AC13-4F50-4A43-5049-414350493635
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.6
+  ENTRY_POINT                    = A733AcpiDxeEntryPoint
+
+[Sources]
+  A733AcpiDxe.c
+  A733SecondaryEntry.S
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  DynamicTablesPkg/DynamicTablesPkg.dec
+  Platform/OrangePi/OrangePi4ProPkg/OrangePi4ProPkg.dec
+
+[LibraryClasses]
+  AmlLib
+  ArmLib
+  ArmSmcLib
+  BaseLib
+  BaseMemoryLib
+  CacheMaintenanceLib
+  DebugLib
+  IoLib
+  MemoryAllocationLib
+  PcdLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiLib
+
+[FixedPcd]
+  gOrangePi4ProTokenSpaceGuid.PcdAcpiCpuCount
+  gOrangePi4ProTokenSpaceGuid.PcdPsciCpuOnSelfTest
+  gOrangePi4ProTokenSpaceGuid.PcdExposeEhci1ToWindows
+  gOrangePi4ProTokenSpaceGuid.PcdExposeSdMmc0ToWindows
+  gOrangePi4ProTokenSpaceGuid.PcdExposeXhci2ToWindows
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialBaudRate
+  gOrangePi4ProTokenSpaceGuid.PcdA733SpcrUart
+
+[Protocols]
+  gEfiAcpiTableProtocolGuid
+  gA733XhciReadyProtocolGuid
+  gA733GmacReadyProtocolGuid
+
+[Depex]
+  gEfiAcpiTableProtocolGuid AND gA733XhciReadyProtocolGuid

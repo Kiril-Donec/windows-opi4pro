@@ -1,0 +1,29 @@
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = A733SmbiosDxe
+  FILE_GUID                      = A7335B10-4F50-4A43-5049-534D42494F53
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = A733SmbiosDxeEntryPoint
+
+[Sources]
+  A733SmbiosDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  Platform/OrangePi/OrangePi4ProPkg/OrangePi4ProPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+
+[Protocols]
+  gEfiSmbiosProtocolGuid
+
+[Depex]
+  gEfiSmbiosProtocolGuid

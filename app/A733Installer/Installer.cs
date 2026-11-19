@@ -17,6 +17,14 @@ namespace A733Installer
         public override string ToString() => Name;
     }
 
+    /// <summary>A problem with the chosen Windows image; Key is a Strings key (localized in the window).</summary>
+    class SourceException : Exception
+    {
+        public string Key { get; }
+        public string Detail { get; }
+        public SourceException(string key, string message, string detail = null) : base(message) { Key = key; Detail = detail; }
+    }
+
     /// <summary>The Windows source: an .iso (mounted while in use) or a folder / USB drive.</summary>
     class WindowsSource : IDisposable
     {
@@ -34,7 +42,7 @@ namespace A733Installer
                                     "for ($n = 0; $n -lt 20; $n++) { $l = ($i | Get-Volume).DriveLetter; if ($l) { 'LETTER=' + $l; break }; Start-Sleep -Milliseconds 500 }",
                                     out _);
             var m = Regex.Match(o, @"LETTER=([A-Za-z])");
-            if (!m.Success) throw new IOException("cannot mount the ISO: " + o.Trim());
+            if (!m.Success) throw new SourceException("ErrMount", "cannot open the ISO: " + o.Trim(), o.Trim());
             Root = m.Groups[1].Value + ":";
             mounted = true;
         }
@@ -49,8 +57,8 @@ namespace A733Installer
                     if (File.Exists(p)) return p;
                 }
                 if (File.Exists(System.IO.Path.Combine(Root, @"sources\install.swm")))
-                    throw new IOException("split install.swm images are not supported: use the official Microsoft ISO");
-                throw new IOException(@"no sources\install.wim or install.esd here");
+                    throw new SourceException("ErrSwm", "split install.swm images are not supported: use the official Microsoft ISO");
+                throw new SourceException("ErrNotWindows", @"not a Windows installation image (no sources\install.wim or install.esd)");
             }
         }
 
@@ -60,7 +68,7 @@ namespace A733Installer
             var list = new List<Edition>();
             foreach (Match m in Regex.Matches(o, @"Index : (\d+)\s*\r?\nName : ([^\r\n]+)"))
                 list.Add(new Edition { Index = int.Parse(m.Groups[1].Value), Name = m.Groups[2].Value.Trim() });
-            if (list.Count == 0) throw new IOException("cannot read the image list: " + o.Trim());
+            if (list.Count == 0) throw new SourceException("ErrRead", "cannot read the image list: " + o.Trim(), o.Trim());
             foreach (var e in list)
             {
                 Proc.Run(Proc.Sys("dism.exe"), $"/English /Get-WimInfo /WimFile:\"{image}\" /Index:{e.Index}", null, out var d);

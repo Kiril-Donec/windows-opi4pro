@@ -82,6 +82,7 @@ namespace A733Installer
             };
             Closing += OnClosing;
             ApplyLang();
+            UpdateStart();
         }
 
         // ------------------------------------------------------------------ texts
@@ -102,7 +103,7 @@ namespace A733Installer
             if (SourceText.Tag as string != "set") SourceText.Text = T("NotSelected");
             S3Title.Text = T("S3Title"); S3Hint.Text = T("S3Hint");
             AgreeText.Text = T("Agree"); StartBtn.Content = T("Start");
-            if (statusKey != null) Status.Text = string.Format(T(statusKey), statusArg == "NoArm" ? T("NoArm") : statusArg);
+            if (statusKey != null) Status.Text = string.Format(T(statusKey), statusArg ?? "");
             DoneHead.Text = T("DoneHead"); DoneText.Text = T("DoneText"); FailHead.Text = T("FailHead");
             LogExpander.Header = T("Details"); LogBtn.Content = T("OpenLog"); CloseBtn.Content = T("Close");
             if (phase != "setup") RenderProgress();
@@ -111,13 +112,26 @@ namespace A733Installer
         void SetStatus(string key, string arg = null)
         {
             statusKey = key; statusArg = arg;
-            if (key == null) { Status.Visibility = Visibility.Collapsed; return; }
-            Status.Text = string.Format(T(key), arg == "NoArm" ? T("NoArm") : arg);
-            Status.Visibility = Visibility.Visible;
+            if (key == null) { StatusBox.Visibility = Visibility.Collapsed; return; }
+            Status.Text = string.Format(T(key), arg ?? "");
+            StatusBox.Visibility = Visibility.Visible;
         }
 
-        void UpdateStart() =>
+        void UpdateStart()
+        {
             StartBtn.IsEnabled = DiskBox.SelectedIndex >= 0 && EditionBox.SelectedIndex >= 0 && AgreeBox.IsChecked == true && source != null;
+            StepBadge(Num1, Num1Text, "1", DiskBox.SelectedIndex >= 0);
+            StepBadge(Num2, Num2Text, "2", source != null);
+            StepBadge(Num3, Num3Text, "3", source != null && EditionBox.SelectedIndex >= 0);
+        }
+
+        // step number circle: orange number, or a green check once the step is done
+        static void StepBadge(Border b, TextBlock t, string n, bool done)
+        {
+            b.Background = done ? Br("#D1FAE5") : Br("#FDE7D9");
+            t.Text = done ? "\u2714" : n;
+            t.Foreground = done ? Br("#059669") : Br("#C2410C");
+        }
 
         // ------------------------------------------------------------------ setup page
         void Fill()
@@ -145,7 +159,7 @@ namespace A733Installer
                     using (var src = new WindowsSource(path))
                         return WindowsSource.Editions(src.InstallImage).Where(e => e.IsArm64).ToList();
                 });
-                if (list.Count == 0) { SetStatus("ImgErr", "NoArm"); }
+                if (list.Count == 0) { SetStatus("ErrNoArm"); }
                 else
                 {
                     editions = list;
@@ -157,9 +171,10 @@ namespace A733Installer
                     }
                     EditionBox.SelectedIndex = pick;
                     source = path;
-                    if (statusKey == "ImgErr") SetStatus(null);
+                    SetStatus(disks.Count == 0 ? "NoCard" : null);
                 }
             }
+            catch (SourceException ex) { SetStatus(ex.Key, ex.Detail); }
             catch (Exception ex) { SetStatus("ImgErr", ex.Message); }
             finally
             {
@@ -281,7 +296,7 @@ namespace A733Installer
                 DiskBox.Items.Clear(); DiskBox.Items.Add("2: Generic STORAGE DEVICE - 61,9 GB (USB)"); DiskBox.SelectedIndex = 0;
                 SourceText.Text = @"D:\Downloads\Win11_25H2_English_Arm64.iso"; SourceText.Tag = "set"; SourceText.Foreground = Dark;
                 EditionBox.Items.Clear(); EditionBox.Items.Add("Windows 11 Pro"); EditionBox.SelectedIndex = 0;
-                AgreeBox.IsChecked = true; StartBtn.IsEnabled = true;
+                AgreeBox.IsChecked = true; source = SourceText.Text; UpdateStart();
             }
             Topmost = true;
             UpdateLayout();

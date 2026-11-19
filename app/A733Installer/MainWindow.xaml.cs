@@ -78,7 +78,8 @@ namespace A733Installer
                 SizeToContent = SizeToContent.Manual;
                 Height = Math.Ceiling(Root.ActualHeight + chrome.Value);
                 Fill();
-                if (App.Value("--screenshot") is string shot) Screenshot(shot);
+                if (App.Value("--screenshot") is string shot) { Anim.Disabled = true; Screenshot(shot); }
+                else if (App.Has("--demo")) DemoFill();
             };
             Closing += OnClosing;
             ApplyLang();
@@ -114,7 +115,7 @@ namespace A733Installer
             statusKey = key; statusArg = arg;
             if (key == null) { StatusBox.Visibility = Visibility.Collapsed; return; }
             Status.Text = string.Format(T(key), arg ?? "");
-            StatusBox.Visibility = Visibility.Visible;
+            if (StatusBox.Visibility != Visibility.Visible) Anim.FadeIn(StatusBox, 4);
         }
 
         void UpdateStart()
@@ -128,6 +129,7 @@ namespace A733Installer
         // step number circle: orange number, or a green check once the step is done
         static void StepBadge(Border b, TextBlock t, string n, bool done)
         {
+            if (done && t.Text != "✔") Anim.Pop(b);
             b.Background = done ? Br("#D1FAE5") : Br("#FDE7D9");
             t.Text = done ? "\u2714" : n;
             t.Foreground = done ? Br("#059669") : Br("#C2410C");
@@ -188,7 +190,7 @@ namespace A733Installer
         // ------------------------------------------------------------------ progress page
         void BuildSteps()
         {
-            StepPanel.Children.Clear(); icons.Clear(); labels.Clear();
+            StepPanel.Children.Clear(); icons.Clear(); labels.Clear(); pulsing = -1;
             for (int i = 0; i < Installer.StepCount; i++)
             {
                 var row = new DockPanel { Margin = new Thickness(0, 3, 0, 3) };
@@ -200,8 +202,17 @@ namespace A733Installer
             }
         }
 
+        int pulsing = -1;
+
         void RenderProgress()
         {
+            int want = phase == "run" ? current : -1;
+            if (want != pulsing)
+            {
+                if (pulsing >= 0 && pulsing < icons.Count) Anim.Pulse(icons[pulsing], false);
+                if (want >= 0 && want < icons.Count) Anim.Pulse(icons[want], true);
+                pulsing = want;
+            }
             for (int i = 0; i < labels.Count; i++)
             {
                 labels[i].Text = T("Step" + i);
@@ -242,30 +253,32 @@ namespace A733Installer
                 return;
             var o = new InstallOptions { Disk = d.Number, Source = source, Index = ed.Index, AllowVirtual = allowVirtual, SkipInstallImage = App.Has("--skip-image") };
             phase = "run"; current = -1; pct = null; running = true;
-            SetupPage.Visibility = Visibility.Collapsed; ProgressPage.Visibility = Visibility.Visible;
+            SetupPage.Visibility = Visibility.Collapsed;
             BuildSteps(); RenderProgress();
+            Anim.FadeIn(ProgressPage, 12, 280);
             Bar.IsIndeterminate = true;
             cts = new CancellationTokenSource();
             var inst = new Installer
             {
                 Log = AppendLog,
                 Step = i => Dispatcher.BeginInvoke(new Action(() => { current = i; pct = null; Bar.IsIndeterminate = true; RenderProgress(); })),
-                Percent = p => Dispatcher.BeginInvoke(new Action(() => { pct = p; Bar.IsIndeterminate = false; Bar.Value = p; RenderProgress(); })),
+                Percent = p => Dispatcher.BeginInvoke(new Action(() => { pct = p; Bar.IsIndeterminate = false; Anim.To(Bar, p); RenderProgress(); })),
             };
             AppendLog($"disk {d}, source {source}, edition {ed.Name} (index {ed.Index})");
             try
             {
-                await Task.Run(() => inst.Run(o, cts.Token));
+                if (App.Has("--demo")) await Task.Run(() => DemoRun(inst));   // no disk access at all
+                else await Task.Run(() => inst.Run(o, cts.Token));
                 phase = "done";
-                Bar.IsIndeterminate = false; Bar.Value = 100;
-                DonePanel.Visibility = Visibility.Visible;
+                Bar.IsIndeterminate = false; Anim.To(Bar, 100);
+                Anim.FadeIn(DonePanel);
             }
             catch (Exception ex)
             {
                 AppendLog("ERROR: " + ex.Message);
                 phase = "fail"; error = ex.Message; current = Math.Max(current, 0);
-                Bar.IsIndeterminate = false; Bar.Value = 0;
-                FailPanel.Visibility = Visibility.Visible; LogExpander.IsExpanded = true;
+                Bar.IsIndeterminate = false; Anim.To(Bar, 0);
+                Anim.FadeIn(FailPanel); LogExpander.IsExpanded = true;
             }
             running = false;
             CloseBtn.IsEnabled = true;
@@ -279,6 +292,34 @@ namespace A733Installer
                 e.Cancel = true;
             else
                 cts?.Cancel();
+        }
+
+        // ------------------------------------------------------------------ demo (--demo): look at the window, nothing is written
+        void DemoFill()
+        {
+            SetStatus(null);
+            disks = new List<DiskInfo> { new DiskInfo { Number = 99, Name = "DEMO card", Size = 64_000_000_000UL, BusType = 7 } };
+            DiskBox.Items.Clear(); DiskBox.Items.Add(disks[0].ToString());
+            editions = new List<Edition> { new Edition { Index = 1, Name = "Windows 11 Pro (demo)", Arch = "ARM64" } };
+            EditionBox.Items.Clear();
+            source = "demo.iso";
+            SourceText.Text = "DEMO: nothing will be written"; SourceText.Tag = "set"; SourceText.Foreground = Dark;
+            DiskBox.SelectedIndex = 0;
+            EditionBox.Items.Add(editions[0].Name); EditionBox.SelectedIndex = 0;
+            UpdateStart();
+        }
+
+        static void DemoRun(Installer inst)
+        {
+            inst.Log("DEMO: simulated run, no disk is touched");
+            for (int s = 0; s < Installer.StepCount; s++)
+            {
+                inst.Step(s);
+                inst.Log("demo step " + s);
+                if (s == 5) for (int p = 0; p <= 100; p += 2) { inst.Percent(p); Thread.Sleep(60); }
+                else Thread.Sleep(900);
+            }
+            inst.Log("DONE.");
         }
 
         // ------------------------------------------------------------------ docs screenshots

@@ -389,25 +389,64 @@ namespace A733Installer
             var back = new Window
             {
                 WindowStyle = WindowStyle.None, ResizeMode = ResizeMode.NoResize, ShowInTaskbar = false, Topmost = true,
-                Background = Br("#E2E8F0"), Left = Left - pad, Top = Top - pad, Width = ActualWidth + 2 * pad, Height = ActualHeight + 2 * pad,
+                Background = Brushes.Black, Left = Left - pad, Top = Top - pad, Width = ActualWidth + 2 * pad, Height = ActualHeight + 2 * pad,
             };
             back.Show();
             Topmost = false; Topmost = true;
             Activate();
+            int x = (int)((Left - pad) * m.M11), y = (int)((Top - pad) * m.M22);
+            int w = (int)((ActualWidth + 2 * pad) * m.M11), h = (int)((ActualHeight + 2 * pad) * m.M22);
+
+            // Capture on black and on white: the difference gives each pixel's alpha, so the PNG
+            // is transparent around the window (rounded corners and shadow included) and fits any
+            // page background (GitHub light and dark themes).
+            var onBlack = Capture(x, y, w, h);
+            back.Background = Brushes.White;
+            var onWhite = Capture(x, y, w, h);
+            back.Close();
+            using (var bmp = Matte(onBlack, onWhite, w, h))
+                bmp.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+            Close();
+        }
+
+        int[] Capture(int x, int y, int w, int h)
+        {
             for (int i = 0; i < 12; i++)
             {
                 Dispatcher.Invoke(DispatcherPriority.Background, new Action(() => { }));
                 Thread.Sleep(80);
             }
-            int x = (int)((Left - pad) * m.M11), y = (int)((Top - pad) * m.M22);
-            int w = (int)((ActualWidth + 2 * pad) * m.M11), h = (int)((ActualHeight + 2 * pad) * m.M22);
-            using (var bmp = new System.Drawing.Bitmap(w, h))
+            using (var bmp = new System.Drawing.Bitmap(w, h, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
             {
                 using (var g = System.Drawing.Graphics.FromImage(bmp)) g.CopyFromScreen(x, y, 0, 0, new System.Drawing.Size(w, h));
-                bmp.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+                var data = bmp.LockBits(new System.Drawing.Rectangle(0, 0, w, h), System.Drawing.Imaging.ImageLockMode.ReadOnly, bmp.PixelFormat);
+                var px = new int[w * h];
+                System.Runtime.InteropServices.Marshal.Copy(data.Scan0, px, 0, px.Length);
+                bmp.UnlockBits(data);
+                return px;
             }
-            back.Close();
-            Close();
+        }
+
+        static System.Drawing.Bitmap Matte(int[] black, int[] white, int w, int h)
+        {
+            var px = new int[w * h];
+            for (int i = 0; i < px.Length; i++)
+            {
+                int b = black[i], wh = white[i];
+                int br = (b >> 16) & 255, bg = (b >> 8) & 255, bb = b & 255;
+                int wr = (wh >> 16) & 255, wg = (wh >> 8) & 255, wb = wh & 255;
+                // white - black = 255 * (1 - alpha) per channel
+                int a = 255 - ((wr - br) + (wg - bg) + (wb - bb)) / 3;
+                if (a <= 0) { px[i] = 0; continue; }
+                if (a > 255) a = 255;
+                int r = Math.Min(255, br * 255 / a), g = Math.Min(255, bg * 255 / a), bl = Math.Min(255, bb * 255 / a);
+                px[i] = (a << 24) | (r << 16) | (g << 8) | bl;
+            }
+            var bmp = new System.Drawing.Bitmap(w, h, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            var data = bmp.LockBits(new System.Drawing.Rectangle(0, 0, w, h), System.Drawing.Imaging.ImageLockMode.WriteOnly, bmp.PixelFormat);
+            System.Runtime.InteropServices.Marshal.Copy(px, 0, data.Scan0, px.Length);
+            bmp.UnlockBits(data);
+            return bmp;
         }
     }
 }

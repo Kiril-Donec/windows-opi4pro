@@ -66,16 +66,15 @@ Windows работает в **тестовом режиме** (надпись в
    (**20–60 минут**) и перезагружается. Плату в это время не выключайте.
 7. Дальше обычная настройка Windows. Если сети нет, выберите *«У меня нет интернета»*.
 
-**Без exe:** тот же установщик есть в виде открытых PowerShell-скриптов. Скачайте репозиторий
-(**Code → Download ZIP**), распакуйте и запустите `Install-Windows-on-SD.cmd` (то же окно) или из командной строки:
+**Из командной строки:** тот же exe работает и без окна (запускать из терминала администратора):
 
 ```powershell
-.\installer\Install-A733Windows.ps1 -NoGui -DiskNumber 2 -IsoPath D:\Win11_Arm64.iso -ImageIndex 6
+.\A733-Windows-Installer.exe --run --disk 2 --source D:\Win11_Arm64.iso --index 6 --log C:\a733-install.log
 ```
 
 ### Что делает установщик
 
-На ПК (`app/A733Installer` или скрипты в `installer/`):
+На ПК (`app/A733Installer`):
 
 1. пишет в начало карты образ прошивки на 64 МиБ (boot0, U-Boot, UEFI);
 2. пишет **особую GPT**: таблица разделов лежит в секторе 1024, а первый доступный сектор 65536, так что
@@ -106,8 +105,7 @@ Windows работает в **тестовом режиме** (надпись в
 | Путь | Что |
 |---|---|
 | `app/A733Installer/` | установщик-exe (C#, WPF, .NET Framework 4.8); прошивка, драйверы и скрипт WinPE вшиваются при сборке |
-| `Install-Windows-on-SD.cmd` | запуск версии установщика на скриптах |
-| `installer/` | установщик для ПК (PowerShell + WinForms), работа с диском и GPT, скрипт WinPE |
+| `installer/winpe/` | скрипт, который работает на плате (WinPE): ставит Windows, добавляет драйверы, пишет загрузчик |
 | `firmware/opi4pro-a733-uefi-v60.img.gz` | образ на 64 МиБ: MBR, boot0, U-Boot (Orange Pi), UEFI v60 |
 | `drivers/sd`, `drivers/ethernet` | тестово подписанные драйверы ARM64 (SD 2.6.0.0, Ethernet 0.2.2.0) |
 | `src/uefi/` | пакет платформы EDK2 `OrangePi4ProPkg` и скрипт сборки |

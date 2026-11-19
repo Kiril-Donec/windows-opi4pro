@@ -67,17 +67,16 @@ Windows runs in **test mode** (a watermark in the corner), because the A733 driv
 7. The normal Windows setup screens follow. If there is no network, choose
    *"I don't have internet"*.
 
-**Without the exe:** the same installer exists as readable PowerShell scripts. Download the repository
-(**Code → Download ZIP**), unzip it and run `Install-Windows-on-SD.cmd` (same window), or from the
+**Command line:** the same exe works without the window (run it from an administrator terminal):
 command line:
 
 ```powershell
-.\installer\Install-A733Windows.ps1 -NoGui -DiskNumber 2 -IsoPath D:\Win11_Arm64.iso -ImageIndex 6
+.\A733-Windows-Installer.exe --run --disk 2 --source D:\Win11_Arm64.iso --index 6 --log C:\a733-install.log
 ```
 
 ### What the installer does
 
-On the PC (`app/A733Installer`, or the scripts in `installer/`):
+On the PC (`app/A733Installer`):
 
 1. writes the 64 MiB firmware image (boot0, U-Boot, UEFI) to the start of the card;
 2. writes a **special GPT**: its partition entries sit at LBA 1024 and the first usable sector is 65536,
@@ -107,8 +106,7 @@ runs `bcdboot`, enables test signing and reboots.
 | Path | What |
 |---|---|
 | `app/A733Installer/` | the installer exe (C#, WPF, .NET Framework 4.8); firmware, drivers and the WinPE script are embedded at build time |
-| `Install-Windows-on-SD.cmd` | starts the script version of the installer |
-| `installer/` | PC installer (PowerShell + WinForms), raw disk / GPT code, WinPE script |
+| `installer/winpe/` | the script that runs on the board (WinPE): applies Windows, adds the drivers, writes the boot files |
 | `firmware/opi4pro-a733-uefi-v60.img.gz` | 64 MiB card image: MBR, boot0, U-Boot (Orange Pi), UEFI v60 |
 | `drivers/sd`, `drivers/ethernet` | test-signed ARM64 driver packages (SD 2.6.0.0, Ethernet 0.2.2.0) |
 | `src/uefi/` | EDK2 platform package `OrangePi4ProPkg` and the build script |

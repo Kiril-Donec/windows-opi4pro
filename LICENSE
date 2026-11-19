@@ -20,7 +20,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-This license covers the installer (installer/, Install-Windows-on-SD.cmd) and
+This license covers the installer (app/, installer/) and
 the driver sources (src/drivers/) except files that carry their own notice.
 The UEFI platform package (src/uefi/OrangePi4ProPkg) is BSD-2-Clause-Patent,
 see its LICENSE file. See NOTICE.md for third-party components.

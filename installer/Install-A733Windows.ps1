@@ -248,9 +248,17 @@ function Show-Gui {
     $f.Add_Shown({
         & $fill
         if ($ScreenshotPath) {
+            # copy from the screen so the Windows 11 frame is captured as users see it
+            $f.TopMost = $true
+            $f.Activate()
             $f.Refresh()
-            $bmp = New-Object Drawing.Bitmap($f.Width, $f.Height)
-            $f.DrawToBitmap($bmp, (New-Object Drawing.Rectangle(0, 0, $f.Width, $f.Height)))
+            [Windows.Forms.Application]::DoEvents()
+            Start-Sleep -Milliseconds 700
+            $b = $f.Bounds
+            $bmp = New-Object Drawing.Bitmap($b.Width, $b.Height)
+            $g = [Drawing.Graphics]::FromImage($bmp)
+            $g.CopyFromScreen($b.Location, [Drawing.Point]::Empty, $b.Size)
+            $g.Dispose()
             $bmp.Save($ScreenshotPath, [Drawing.Imaging.ImageFormat]::Png)
             $bmp.Dispose()
             $f.Close()

@@ -48,8 +48,8 @@ namespace A733Installer
             lang = App.Value("--lang") ?? (new[] { "ru", "uk", "be" }.Contains(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName) ? "ru" : "en");
             if (!Strings.Text.ContainsKey(lang)) lang = "en";
 
-            LangEn.Click += (s, e) => { lang = "en"; ApplyLang(); };
-            LangRu.Click += (s, e) => { lang = "ru"; ApplyLang(); };
+            LangEn.Click += (s, e) => SwitchLang("en");
+            LangRu.Click += (s, e) => SwitchLang("ru");
             RefreshBtn.Click += (s, e) => Fill();
             DiskBox.SelectionChanged += (s, e) => UpdateStart();
             EditionBox.SelectionChanged += (s, e) => UpdateStart();
@@ -93,9 +93,9 @@ namespace A733Installer
             HeadTitle.Text = T("Title");
             SubTitle.Text = string.Format(T("Sub"), App.Version);
             Badge.Text = T("Badge");
-            LangEn.Background = lang == "en" ? Brushes.White : Brushes.Transparent;
+            Anim.SlideX(LangThumbX, lang == "en" ? 0 : 38);
             LangEn.Foreground = lang == "en" ? Accent : Brushes.White;
-            LangRu.Background = lang == "ru" ? Brushes.White : Brushes.Transparent;
+
             LangRu.Foreground = lang == "ru" ? Accent : Brushes.White;
             WarnBold.Text = T("WarnBold"); WarnRest.Text = T("WarnRest");
             S1Title.Text = T("S1Title"); S1Hint.Text = T("S1Hint"); RefreshBtn.Content = T("Refresh");
@@ -108,6 +108,15 @@ namespace A733Installer
             DoneHead.Text = T("DoneHead"); DoneText.Text = T("DoneText"); FailHead.Text = T("FailHead");
             LogExpander.Header = T("Details"); LogBtn.Content = T("OpenLog"); CloseBtn.Content = T("Close");
             if (phase != "setup") RenderProgress();
+        }
+
+        // language switch: the thumb slides, the texts fade out and back in
+        void SwitchLang(string to)
+        {
+            if (to == lang) return;
+            lang = to;
+            Anim.SlideX(LangThumbX, lang == "en" ? 0 : 38);
+            Anim.CrossFade(ApplyLang, HeadText, phase == "setup" ? (UIElement)SetupPage : ProgressPage);
         }
 
         void SetStatus(string key, string arg = null)

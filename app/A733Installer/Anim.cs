@@ -57,6 +57,27 @@ namespace A733Installer
             }
         }
 
+        /// <summary>Slide a translate transform horizontally.</summary>
+        public static void SlideX(TranslateTransform t, double x)
+        {
+            if (!On) { t.BeginAnimation(TranslateTransform.XProperty, null); t.X = x; return; }
+            t.BeginAnimation(TranslateTransform.XProperty, A(null, x, 260, new CubicEase { EasingMode = EasingMode.EaseInOut }));
+        }
+
+        /// <summary>Fade the elements out, run <paramref name="swap"/> (e.g. change texts), fade back in.</summary>
+        public static void CrossFade(Action swap, params UIElement[] els)
+        {
+            if (!On) { swap(); return; }
+            var outA = A(null, 0.15, 110);
+            outA.Completed += (s, e) =>
+            {
+                swap();
+                foreach (var el in els) el.BeginAnimation(UIElement.OpacityProperty, A(0.15, 1, 180));
+            };
+            for (int i = 0; i < els.Length; i++)
+                els[i].BeginAnimation(UIElement.OpacityProperty, i == 0 ? outA : A(null, 0.15, 110));
+        }
+
         /// <summary>Move a progress bar smoothly to a value.</summary>
         public static void To(RangeBase bar, double value)
         {

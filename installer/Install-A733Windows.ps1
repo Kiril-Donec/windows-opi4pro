@@ -29,6 +29,7 @@ param(
     [switch]$NoGui,
     [switch]$AllowVirtualDisk,   # developer testing with an attached VHD(X)
     [switch]$TestSkipInstallImage, # developer testing: do not copy install.wim/esd
+    [string]$ScreenshotPath,     # docs: save a picture of the window and exit
     [string]$LogPath
 )
 $ErrorActionPreference = 'Stop'
@@ -36,9 +37,14 @@ $ProgressPreference = 'SilentlyContinue'
 $Repo = Split-Path -Parent $PSScriptRoot
 $Version = '0.1.0'
 
+if ($ScreenshotPath) {
+    . (Join-Path $PSScriptRoot 'A733Disk.ps1')
+    $AllowVirtualDisk = $false
+}
+
 # ------------------------------------------------------------------ elevation
 $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+if (-not $ScreenshotPath -and -not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     $argList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`"")
     foreach ($k in $PSBoundParameters.Keys) {
         $v = $PSBoundParameters[$k]
@@ -85,7 +91,7 @@ function Get-Firmware {
 function Get-CandidateDisks {
     $bus = @('USB', 'SD', 'MMC')
     if ($AllowVirtualDisk) { $bus += 'File Backed Virtual' }
-    @(Get-Disk | Where-Object {
+    @(Get-Disk -ErrorAction SilentlyContinue | Where-Object {
         ($bus -contains [string]$_.BusType) -and -not $_.IsBoot -and -not $_.IsSystem -and
         $_.Size -ge 15GB -and $_.Size -le 1TB
     } | Sort-Object Number)
@@ -191,7 +197,7 @@ function Show-Gui {
     $update = { $start.Enabled = ($disks.SelectedIndex -ge 0 -and $eds.SelectedIndex -ge 0 -and $ok.Checked) }
     $fill = {
         $disks.Items.Clear()
-        $state.Disks = Get-CandidateDisks
+        $state.Disks = @(Get-CandidateDisks)
         foreach ($d in $state.Disks) { [void]$disks.Items.Add((Format-Disk $d)) }
         $status.Text = if ($state.Disks.Count) { '' } else { 'No SD card found (15 GB .. 1 TB, card reader / USB). Insert the card and press Refresh.' }
         & $update
@@ -239,7 +245,17 @@ function Show-Gui {
             $f.Close()
         }
     })
-    $f.Add_Shown({ & $fill })
+    $f.Add_Shown({
+        & $fill
+        if ($ScreenshotPath) {
+            $f.Refresh()
+            $bmp = New-Object Drawing.Bitmap($f.Width, $f.Height)
+            $f.DrawToBitmap($bmp, (New-Object Drawing.Rectangle(0, 0, $f.Width, $f.Height)))
+            $bmp.Save($ScreenshotPath, [Drawing.Imaging.ImageFormat]::Png)
+            $bmp.Dispose()
+            $f.Close()
+        }
+    })
     [void]$f.ShowDialog()
     $state.Result
 }
@@ -247,7 +263,7 @@ function Show-Gui {
 # ------------------------------------------------------------------ steps
 function Get-FreeLetters([int]$Count) {
     $used = @([IO.DriveInfo]::GetDrives() | ForEach-Object { $_.Name.Substring(0, 1).ToUpper() })
-    $free = @('S', 'W', 'R', 'T', 'U', 'V', 'Q', 'P', 'O', 'N', 'M', 'L', 'K') | Where-Object { $used -notcontains $_ }
+    $free = @(@('S', 'W', 'R', 'T', 'U', 'V', 'Q', 'P', 'O', 'N', 'M', 'L', 'K') | Where-Object { $used -notcontains $_ })
     if ($free.Count -lt $Count) { throw 'not enough free drive letters' }
     $free[0..($Count - 1)]
 }
@@ -434,6 +450,7 @@ function Invoke-Install([int]$Number, [string]$Iso, [int]$Index) {
 }
 
 # ------------------------------------------------------------------ main
+if ($ScreenshotPath) { Show-Gui | Out-Null; return }
 Start-Transcript -Path $LogPath -Force | Out-Null
 try {
     if ($DiskNumber -lt 0 -or -not $IsoPath -or $ImageIndex -le 0) {

@@ -11,8 +11,6 @@
 #    A standard GPT puts its entries at LBA 2..33, right over boot0: that is
 #    why Windows Setup must never repartition this card.
 
-Set-StrictMode -Version 2
-
 $script:Sector = 512
 $script:P1Start = 65536
 $script:P1Sectors = 65536

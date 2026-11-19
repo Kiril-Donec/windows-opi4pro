@@ -44,6 +44,13 @@ Windows runs in **test mode** (a watermark in the corner), because the A733 driv
 
 ## Install
 
+> [!IMPORTANT]
+> The automatic installer (version 0.1.0) is **new and has not yet been run end-to-end on a board**.
+> It was tested on a virtual disk on a PC, and every step it automates was done by hand on the real
+> board. If you try it, please open an issue with the result (a photo of the screen helps).
+
+![Installer window](docs/installer.png)
+
 1. Download this repository (**Code → Download ZIP**, or a release) and unzip it.
 2. Insert the SD card into the PC.
 3. Run **`Install-Windows-on-SD.cmd`** and allow administrator access.

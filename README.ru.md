@@ -54,7 +54,7 @@ Windows работает в **тестовом режиме** (надпись в
 ![Окно установщика](docs/installer-progress-ru.png)
 
 1. Скачайте **`A733-Windows-Installer.exe`** из
-   [Releases](https://github.com/Kiril-Donec/windows-opi4pro/releases/latest).
+   [Releases](https://github.com/Kiril-Donec/windows-opi4pro/releases).
    Это один файл (~2,5 МБ), прошивка и драйверы внутри, больше ничего ставить не нужно.
 2. Вставьте SD-карту в ПК.
 3. Запустите exe и разрешите права администратора. У exe нет цифровой подписи, поэтому SmartScreen может

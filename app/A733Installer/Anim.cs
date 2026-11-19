@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
@@ -29,15 +29,15 @@ namespace A733Installer
         }
 
         /// <summary>A short "spring" when a step badge turns into a check mark.</summary>
-        public static void Pop(FrameworkElement el)
+        public static void Pop(FrameworkElement el, double from = 0.4)
         {
             if (!On) return;
             el.RenderTransformOrigin = new Point(0.5, 0.5);
             var st = el.RenderTransform as ScaleTransform;
             if (st == null) { st = new ScaleTransform(1, 1); el.RenderTransform = st; }
             var ease = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.6 };
-            st.BeginAnimation(ScaleTransform.ScaleXProperty, A(0.4, 1, 320, ease));
-            st.BeginAnimation(ScaleTransform.ScaleYProperty, A(0.4, 1, 320, ease));
+            st.BeginAnimation(ScaleTransform.ScaleXProperty, A(from, 1, 320, ease));
+            st.BeginAnimation(ScaleTransform.ScaleYProperty, A(from, 1, 320, ease));
         }
 
         /// <summary>Slow opacity pulse (the step that is running now).</summary>
@@ -76,6 +76,14 @@ namespace A733Installer
             };
             for (int i = 0; i < els.Length; i++)
                 els[i].BeginAnimation(UIElement.OpacityProperty, i == 0 ? outA : A(null, 0.15, 110));
+        }
+
+        /// <summary>Open a panel by growing its height from 0 (expander body).</summary>
+        public static void Grow(FrameworkElement el, double height)
+        {
+            if (!On) { el.BeginAnimation(FrameworkElement.HeightProperty, null); el.Height = height; return; }
+            el.BeginAnimation(FrameworkElement.HeightProperty, A(0, height, 240));
+            el.BeginAnimation(UIElement.OpacityProperty, A(0, 1, 240));
         }
 
         /// <summary>Move a progress bar smoothly to a value.</summary>

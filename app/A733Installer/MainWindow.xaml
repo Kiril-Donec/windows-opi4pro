@@ -202,13 +202,14 @@
                     <StackPanel Orientation="Horizontal" Background="Transparent">
                       <Path x:Name="Chev" Data="M 0 0 L 4 4 L 0 8" Stroke="#6B7280" StrokeThickness="1.7" VerticalAlignment="Center"
                             Margin="2,0,9,0" RenderTransformOrigin="0.5,0.5">
-                        <Path.RenderTransform><RotateTransform Angle="0"/></Path.RenderTransform>
+                        <Path.RenderTransform><RotateTransform x:Name="ChevRot" Angle="0"/></Path.RenderTransform>
                       </Path>
                       <ContentPresenter VerticalAlignment="Center" TextElement.Foreground="#4B5563"/>
                     </StackPanel>
                     <ControlTemplate.Triggers>
                       <Trigger Property="IsChecked" Value="True">
-                        <Setter TargetName="Chev" Property="RenderTransform"><Setter.Value><RotateTransform Angle="90"/></Setter.Value></Setter>
+                        <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="ChevRot" Storyboard.TargetProperty="Angle" To="90" Duration="0:0:0.2"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation></Storyboard></BeginStoryboard></Trigger.EnterActions>
+                        <Trigger.ExitActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="ChevRot" Storyboard.TargetProperty="Angle" To="0" Duration="0:0:0.2"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation></Storyboard></BeginStoryboard></Trigger.ExitActions>
                       </Trigger>
                       <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chev" Property="Stroke" Value="#EA580C"/></Trigger>
                     </ControlTemplate.Triggers>
@@ -239,8 +240,30 @@
         </Setter.Value>
       </Setter>
     </Style>
+    <Style x:Key="Danger" TargetType="Button">
+      <Setter Property="Padding" Value="20,8"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="b" CornerRadius="6" Padding="{TemplateBinding Padding}">
+              <Border.Background><SolidColorBrush x:Name="bg" Color="#DC2626"/></Border.Background>
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Trigger.EnterActions><BeginStoryboard><Storyboard><ColorAnimation Storyboard.TargetName="bg" Storyboard.TargetProperty="Color" To="#B91C1C" Duration="0:0:0.15"/></Storyboard></BeginStoryboard></Trigger.EnterActions>
+                <Trigger.ExitActions><BeginStoryboard><Storyboard><ColorAnimation Storyboard.TargetName="bg" Storyboard.TargetProperty="Color" To="#DC2626" Duration="0:0:0.2"/></Storyboard></BeginStoryboard></Trigger.ExitActions>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
   </Window.Resources>
-
+  <Grid>
   <StackPanel x:Name="Root" VerticalAlignment="Top">
     <Border Padding="26,18,22,18">
       <Border.Background>
@@ -378,4 +401,32 @@
       </DockPanel>
     </StackPanel>
   </StackPanel>
+
+  <!-- ===================== in-window dialog (confirm / stop) ===================== -->
+  <Grid x:Name="Overlay" Visibility="Collapsed" Background="#73111827">
+    <Border x:Name="DialogCard" Background="White" CornerRadius="12" Width="470" Padding="22,20" VerticalAlignment="Center" HorizontalAlignment="Center"
+            RenderTransformOrigin="0.5,0.5">
+      <Border.Effect><DropShadowEffect BlurRadius="28" ShadowDepth="6" Opacity="0.25"/></Border.Effect>
+      <Border.RenderTransform><ScaleTransform x:Name="DialogScale" ScaleX="1" ScaleY="1"/></Border.RenderTransform>
+      <StackPanel>
+        <DockPanel>
+          <Border x:Name="DialogIcon" DockPanel.Dock="Left" Width="38" Height="38" CornerRadius="19" Background="#FEE2E2" Margin="0,0,14,0" VerticalAlignment="Top">
+            <TextBlock Text="!" FontSize="20" FontWeight="Bold" Foreground="#DC2626" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <StackPanel>
+            <TextBlock x:Name="DialogTitle" FontSize="17" FontWeight="SemiBold"/>
+            <TextBlock x:Name="DialogText" TextWrapping="Wrap" Foreground="#4B5563" Margin="0,6,0,0" LineHeight="19"/>
+            <Border x:Name="DialogDiskBox" Background="#F4F6F9" CornerRadius="6" Padding="10,7" Margin="0,10,0,0">
+              <TextBlock x:Name="DialogDisk" FontWeight="SemiBold" TextWrapping="Wrap"/>
+            </Border>
+          </StackPanel>
+        </DockPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+          <Button x:Name="DialogNo" Style="{StaticResource Btn}" Padding="18,8" Margin="0,0,10,0" IsCancel="True"/>
+          <Button x:Name="DialogYes" Style="{StaticResource Danger}"/>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+  </Grid>
+  </Grid>
 </Window>

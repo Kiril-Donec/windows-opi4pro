@@ -68,6 +68,9 @@ namespace A733Installer
             LogBtn.Click += (s, e) => { if (File.Exists(logPath)) Process.Start("notepad.exe", "\"" + logPath + "\""); };
             CloseBtn.Click += (s, e) => Close();
             StartBtn.Click += (s, e) => Start();
+            DialogYes.Click += (s, e) => CloseDialog(true);
+            DialogNo.Click += (s, e) => CloseDialog(false);
+            LogExpander.Expanded += (s, e) => Anim.Grow(LogBox, 150);
 
             // SizeToContent only for the first layout: later growth (status line, progress page,
             // details) would leave an unpainted strip at the bottom. Follow the content explicitly.
@@ -245,7 +248,7 @@ namespace A733Installer
         void AppendLog(string line)
         {
             var stamped = $"{DateTime.Now:HH:mm:ss} {line}";
-            try { File.AppendAllText(logPath, stamped + Environment.NewLine); } catch { }
+            try { File.AppendAllText(logPath, stamped + Environment.NewLine, new System.Text.UTF8Encoding(true)); } catch { }
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 LogBox.AppendText((LogBox.Text.Length > 0 ? Environment.NewLine : "") + stamped);
@@ -257,7 +260,7 @@ namespace A733Installer
         {
             var d = disks[DiskBox.SelectedIndex];
             var ed = editions[EditionBox.SelectedIndex];
-            if (MessageBox.Show(this, string.Format(T("Confirm"), ed.Name, d), T("ConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            if (!await Ask(T("DlgEraseTitle"), string.Format(T("DlgEraseText"), ed.Name), d.ToString(), T("DlgEraseYes"), T("Cancel")))
                 return;
             var o = new InstallOptions { Disk = d.Number, Source = source, Index = ed.Index, AllowVirtual = allowVirtual, SkipInstallImage = App.Has("--skip-image") };
             phase = "run"; current = -1; pct = null; running = true;
@@ -293,13 +296,45 @@ namespace A733Installer
             RenderProgress();
         }
 
-        void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
+        bool allowClose;
+
+        async void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (!running) return;
-            if (MessageBox.Show(this, T("StopQ"), T("StopTitle"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
-                e.Cancel = true;
-            else
+            if (!running || allowClose) return;
+            e.Cancel = true;                       // ask in the window, close afterwards
+            if (Overlay.Visibility == Visibility.Visible) return;
+            if (await Ask(T("StopTitle"), T("DlgStopText"), null, T("DlgStopYes"), T("DlgStopNo")))
+            {
+                allowClose = true;
                 cts?.Cancel();
+                Close();
+            }
+        }
+
+        // ------------------------------------------------------------------ in-window dialog
+        TaskCompletionSource<bool> dialog;
+
+        Task<bool> Ask(string title, string text, string disk, string yes, string no)
+        {
+            dialog?.TrySetResult(false);
+            dialog = new TaskCompletionSource<bool>();
+            DialogTitle.Text = title;
+            DialogText.Text = text;
+            DialogDisk.Text = disk ?? "";
+            DialogDiskBox.Visibility = disk == null ? Visibility.Collapsed : Visibility.Visible;
+            DialogYes.Content = yes;
+            DialogNo.Content = no;
+            Overlay.Visibility = Visibility.Visible;
+            Anim.FadeIn(Overlay, 0, 160);
+            Anim.Pop(DialogCard, 0.92);
+            DialogNo.Focus();
+            return dialog.Task;
+        }
+
+        void CloseDialog(bool result)
+        {
+            Overlay.Visibility = Visibility.Collapsed;
+            dialog?.TrySetResult(result);
         }
 
         // ------------------------------------------------------------------ demo (--demo): look at the window, nothing is written

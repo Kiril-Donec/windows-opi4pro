@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace A733Installer
 {
@@ -27,7 +27,10 @@ namespace A733Installer
                 ["ErrMount"] = "Cannot open this ISO file. It may be damaged or incomplete; try downloading it again.",
                 ["ErrRead"] = "Cannot read the Windows image (install.wim). The file may be damaged; try downloading the ISO again.",
                 ["FolderDesc"] = "Folder or USB drive with the extracted Windows 11 ARM64 ISO (contains sources\\install.wim)",
-                ["Confirm"] = "Erase this card and write Windows 11 ({0})?\n\n{1}", ["ConfirmTitle"] = "Confirm",
+                ["DlgEraseTitle"] = "Erase the card?", ["DlgEraseText"] = "Everything on this card will be deleted and {0} will be written to it. This cannot be undone.",
+                ["DlgEraseYes"] = "Erase and write", ["Cancel"] = "Cancel",
+                ["DlgStopText"] = "The card is being written. If you stop now it will not boot, but you can simply run the installer again.",
+                ["DlgStopYes"] = "Stop", ["DlgStopNo"] = "Continue",
                 ["ProgTitle"] = "Writing the card...", ["ProgSub"] = "Do not remove the card. This takes 5-15 minutes.",
                 ["Step0"] = "Read the Windows image", ["Step1"] = "Prepare the installer (WinPE + A733 drivers)",
                 ["Step2"] = "Write boot firmware and partition table", ["Step3"] = "Format the card",
@@ -60,7 +63,10 @@ namespace A733Installer
                 ["ErrMount"] = "Не удаётся открыть этот ISO. Возможно, файл повреждён или скачан не до конца, скачайте его заново.",
                 ["ErrRead"] = "Не удаётся прочитать образ Windows (install.wim). Возможно, файл повреждён, скачайте ISO заново.",
                 ["FolderDesc"] = "Папка или флешка с распакованным ISO Windows 11 ARM64 (в ней есть sources\\install.wim)",
-                ["Confirm"] = "Стереть эту карту и записать Windows 11 ({0})?\n\n{1}", ["ConfirmTitle"] = "Подтверждение",
+                ["DlgEraseTitle"] = "Стереть карту?", ["DlgEraseText"] = "Всё на этой карте будет удалено, и на неё запишется {0}. Отменить это будет нельзя.",
+                ["DlgEraseYes"] = "Стереть и записать", ["Cancel"] = "Отмена",
+                ["DlgStopText"] = "Карта сейчас записывается. Если остановить, она не загрузится, но установщик можно просто запустить снова.",
+                ["DlgStopYes"] = "Остановить", ["DlgStopNo"] = "Продолжить",
                 ["ProgTitle"] = "Запись карты...", ["ProgSub"] = "Не вынимайте карту. Это займёт 5-15 минут.",
                 ["Step0"] = "Чтение образа Windows", ["Step1"] = "Подготовка установщика (WinPE + драйверы A733)",
                 ["Step2"] = "Запись загрузчика и таблицы разделов", ["Step3"] = "Форматирование карты",

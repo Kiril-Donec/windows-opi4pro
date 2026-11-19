@@ -49,7 +49,9 @@ Windows runs in **test mode** (a watermark in the corner), because the A733 driv
 > It was tested on a virtual disk on a PC, and every step it automates was done by hand on the real
 > board. If you try it, please open an issue with the result (a photo of the screen helps).
 
-![Installer window](docs/installer.png)
+![Installer window](docs/installer-setup-en.png)
+
+![Installer window](docs/installer-progress-en.png)
 
 1. Download this repository (**Code → Download ZIP**, or a release) and unzip it.
 2. Insert the SD card into the PC.

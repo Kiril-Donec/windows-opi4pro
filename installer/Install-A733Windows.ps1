@@ -30,6 +30,8 @@ param(
     [switch]$AllowVirtualDisk,   # developer testing with an attached VHD(X)
     [switch]$TestSkipInstallImage, # developer testing: do not copy install.wim/esd
     [string]$ScreenshotPath,     # docs: save a picture of the window and exit
+    [ValidateSet('setup', 'progress')][string]$ScreenshotVariant = 'setup',
+    [ValidateSet('', 'en', 'ru')][string]$Language = '',   # window language; default: from Windows
     [string]$LogPath
 )
 $ErrorActionPreference = 'Stop'
@@ -50,11 +52,13 @@ if (-not $ScreenshotPath -and -not $principal.IsInRole([Security.Principal.Windo
         $v = $PSBoundParameters[$k]
         if ($v -is [switch]) { if ($v) { $argList += "-$k" } } else { $argList += "-$k"; $argList += "`"$v`"" }
     }
-    Start-Process powershell.exe -Verb RunAs -ArgumentList $argList
+    # window mode: no console window behind the installer window
+    $style = if ($NoGui) { 'Normal' } else { 'Hidden' }
+    Start-Process powershell.exe -Verb RunAs -WindowStyle $style -ArgumentList $argList
     return
 }
 
-. (Join-Path $PSScriptRoot 'A733Disk.ps1')
+if (-not $ScreenshotPath) { . (Join-Path $PSScriptRoot 'A733Disk.ps1') }
 
 if (-not $LogPath) {
     $logDir = Join-Path $Repo 'logs'
@@ -132,149 +136,7 @@ function Get-Editions([string]$InstallImage) {
 }
 
 # ------------------------------------------------------------------ GUI
-function Show-Gui {
-    Add-Type -AssemblyName System.Windows.Forms, System.Drawing
-    [Windows.Forms.Application]::EnableVisualStyles()
-    $f = New-Object Windows.Forms.Form
-    $f.Text = "Orange Pi 4 Pro - Windows SD installer $Version"
-    $f.Size = New-Object Drawing.Size(620, 430)
-    $f.StartPosition = 'CenterScreen'
-    $f.FormBorderStyle = 'FixedDialog'
-    $f.MaximizeBox = $false
-    $font = New-Object Drawing.Font('Segoe UI', 9)
-    $f.Font = $font
-    $y = 12
-    function Add-Label($text, $yy, $h = 20, $bold = $false) {
-        $l = New-Object Windows.Forms.Label
-        $l.Text = $text; $l.Location = New-Object Drawing.Point(14, $yy); $l.Size = New-Object Drawing.Size(580, $h)
-        if ($bold) { $l.Font = New-Object Drawing.Font('Segoe UI', 9, [Drawing.FontStyle]::Bold) }
-        $f.Controls.Add($l); $l
-    }
-    $warn = Add-Label ("EXPERIMENTAL. Everything on the selected card will be ERASED.`r`n" +
-                       "ЭКСПЕРИМЕНТАЛЬНО. Всё на выбранной карте будет СТЁРТО.") $y 36 $true
-    $warn.ForeColor = [Drawing.Color]::DarkRed
-    $y += 46
-    Add-Label '1. SD card / SD-карта:' $y | Out-Null
-    $y += 22
-    $disks = New-Object Windows.Forms.ComboBox
-    $disks.DropDownStyle = 'DropDownList'; $disks.Location = New-Object Drawing.Point(14, $y); $disks.Size = New-Object Drawing.Size(470, 24)
-    $f.Controls.Add($disks)
-    $refresh = New-Object Windows.Forms.Button
-    $refresh.Text = 'Refresh'; $refresh.Location = New-Object Drawing.Point(494, ($y - 1)); $refresh.Size = New-Object Drawing.Size(96, 26)
-    $f.Controls.Add($refresh)
-    $y += 38
-    Add-Label '2. Windows 11 ARM64: ISO file, or a folder / USB drive with the extracted ISO:' $y | Out-Null
-    $y += 22
-    $iso = New-Object Windows.Forms.TextBox
-    $iso.Location = New-Object Drawing.Point(14, $y); $iso.Size = New-Object Drawing.Size(370, 24); $iso.ReadOnly = $true
-    $f.Controls.Add($iso)
-    $browse = New-Object Windows.Forms.Button
-    $browse.Text = 'ISO...'; $browse.Location = New-Object Drawing.Point(394, ($y - 1)); $browse.Size = New-Object Drawing.Size(96, 26)
-    $f.Controls.Add($browse)
-    $folder = New-Object Windows.Forms.Button
-    $folder.Text = 'Folder...'; $folder.Location = New-Object Drawing.Point(494, ($y - 1)); $folder.Size = New-Object Drawing.Size(96, 26)
-    $f.Controls.Add($folder)
-    $y += 38
-    Add-Label '3. Edition / Редакция:' $y | Out-Null
-    $y += 22
-    $eds = New-Object Windows.Forms.ComboBox
-    $eds.DropDownStyle = 'DropDownList'; $eds.Location = New-Object Drawing.Point(14, $y); $eds.Size = New-Object Drawing.Size(576, 24)
-    $f.Controls.Add($eds)
-    $y += 40
-    $ok = New-Object Windows.Forms.CheckBox
-    $ok.Text = 'I understand the card will be erased / Я понимаю, что карта будет стёрта'
-    $ok.Location = New-Object Drawing.Point(14, $y); $ok.Size = New-Object Drawing.Size(576, 24)
-    $f.Controls.Add($ok)
-    $y += 34
-    $status = Add-Label '' $y 40
-    $y += 46
-    $start = New-Object Windows.Forms.Button
-    $start.Text = 'Write card / Записать карту'; $start.Location = New-Object Drawing.Point(380, $y); $start.Size = New-Object Drawing.Size(210, 32)
-    $start.Enabled = $false
-    $f.Controls.Add($start)
-
-    $state = @{ Disks = @(); Editions = @(); Result = $null }
-    $update = { $start.Enabled = ($disks.SelectedIndex -ge 0 -and $eds.SelectedIndex -ge 0 -and $ok.Checked) }
-    $fill = {
-        $disks.Items.Clear()
-        $state.Disks = @(Get-CandidateDisks)
-        foreach ($d in $state.Disks) { [void]$disks.Items.Add((Format-Disk $d)) }
-        $status.Text = if ($state.Disks.Count) { '' } else { 'No SD card found (15 GB .. 1 TB, card reader / USB). Insert the card and press Refresh.' }
-        & $update
-    }
-    $refresh.Add_Click($fill)
-    $disks.Add_SelectedIndexChanged($update)
-    $eds.Add_SelectedIndexChanged($update)
-    $ok.Add_CheckedChanged($update)
-    $load = {
-        param([string]$path)
-        $iso.Text = $path
-        $eds.Items.Clear(); $state.Editions = @()
-        $status.Text = 'Reading the Windows image...'; $f.Refresh()
-        try {
-            $root = Mount-Iso $path
-            try {
-                $state.Editions = @(Get-Editions (Find-InstallImage $root) | Where-Object { $_.Arch -eq 12 })
-            } finally { Dismount-Iso $path }
-            if (-not $state.Editions.Count) { throw 'no ARM64 image here: download "Windows 11 (Arm64)" from microsoft.com' }
-            $pick = 0
-            for ($i = 0; $i -lt $state.Editions.Count; $i++) {
-                [void]$eds.Items.Add("$($state.Editions[$i].Index): $($state.Editions[$i].Name)")
-                if ($state.Editions[$i].Name -match 'Pro$') { $pick = $i }
-            }
-            $eds.SelectedIndex = $pick
-            $status.Text = ''
-        } catch { $status.Text = "Windows image: $($_.Exception.Message)" }
-        & $update
-    }
-    $browse.Add_Click({
-        $dlg = New-Object Windows.Forms.OpenFileDialog
-        $dlg.Filter = 'ISO image (*.iso)|*.iso'
-        if ($dlg.ShowDialog() -eq 'OK') { & $load $dlg.FileName }
-    })
-    $folder.Add_Click({
-        $dlg = New-Object Windows.Forms.FolderBrowserDialog
-        $dlg.Description = 'Folder or USB drive with the extracted Windows 11 ARM64 ISO (has sources\install.wim)'
-        if ($dlg.ShowDialog() -eq 'OK') { & $load $dlg.SelectedPath }
-    })
-    $start.Add_Click({
-        $d = $state.Disks[$disks.SelectedIndex]
-        $msg = "ERASE this card?`r`n`r`n$(Format-Disk $d)`r`n`r`nСТЕРЕТЬ эту карту?"
-        if ([Windows.Forms.MessageBox]::Show($msg, 'Confirm', 'YesNo', 'Warning') -eq 'Yes') {
-            $state.Result = @{ Disk = $d.Number; Iso = $iso.Text; Index = $state.Editions[$eds.SelectedIndex].Index }
-            $f.Close()
-        }
-    })
-    $f.Add_Shown({
-        & $fill
-        if ($ScreenshotPath) {
-            # copy from the screen so the Windows 11 frame is captured as users see it,
-            # on a plain backdrop with a margin for the rounded corners and the shadow
-            $pad = 36
-            $b = $f.Bounds
-            $b.Inflate($pad, $pad)
-            $back = New-Object Windows.Forms.Form
-            $back.FormBorderStyle = 'None'; $back.StartPosition = 'Manual'; $back.ShowInTaskbar = $false
-            $back.BackColor = [Drawing.Color]::FromArgb(226, 232, 240)
-            $back.Bounds = $b
-            $back.Show()
-            $f.TopMost = $true
-            $f.Activate()
-            $f.Refresh()
-            for ($i = 0; $i -lt 10; $i++) { [Windows.Forms.Application]::DoEvents(); Start-Sleep -Milliseconds 100 }
-            $bmp = New-Object Drawing.Bitmap($b.Width, $b.Height)
-            $g = [Drawing.Graphics]::FromImage($bmp)
-            $g.CopyFromScreen($b.Location, [Drawing.Point]::Empty, $b.Size)
-            $g.Dispose()
-            $bmp.Save($ScreenshotPath, [Drawing.Imaging.ImageFormat]::Png)
-            $bmp.Dispose()
-            $back.Close()
-            $f.Close()
-        }
-    })
-    [void]$f.ShowDialog()
-    $state.Result
-}
+. (Join-Path $PSScriptRoot 'A733Gui.ps1')
 
 # ------------------------------------------------------------------ steps
 function Get-FreeLetters([int]$Count) {
@@ -402,7 +264,7 @@ function Invoke-Install([int]$Number, [string]$Iso, [int]$Index) {
         if ($ed.Arch -ne 12) { throw "index $Index ($($ed.Name)) is not ARM64" }
         Say "edition: $($ed.Name) (index $Index, $([int]((Get-Item $install).Length / 1MB)) MiB)"
 
-        if (-not $NoGui -or $Yes) { } else {
+        if (-not $Yes) {
             $answer = Read-Host "Type ERASE to wipe disk $Number ($($disk.FriendlyName))"
             if ($answer -cne 'ERASE') { throw 'cancelled' }
         }
@@ -466,16 +328,20 @@ function Invoke-Install([int]$Number, [string]$Iso, [int]$Index) {
 }
 
 # ------------------------------------------------------------------ main
-if ($ScreenshotPath) { Show-Gui | Out-Null; return }
+if ($ScreenshotPath) {
+    $script:GuiScreenshotVariant = $ScreenshotVariant
+    Show-A733Gui -ScriptPath $PSCommandPath -Version $Version -LogPath $LogPath -Screenshot $ScreenshotPath -Language $Language | Out-Null
+    return
+}
+if (-not $NoGui -and ($DiskNumber -lt 0 -or -not $IsoPath -or $ImageIndex -le 0)) {
+    # window mode: the window starts this script again with -NoGui -Yes and follows its log
+    if ($TestSkipInstallImage) { $script:GuiExtraArgs = @('-TestSkipInstallImage') }
+    $code = Show-A733Gui -ScriptPath $PSCommandPath -Version $Version -LogPath $LogPath -AllowVirtual:$AllowVirtualDisk -Language $Language
+    exit $code
+}
 Start-Transcript -Path $LogPath -Force | Out-Null
 try {
-    if ($DiskNumber -lt 0 -or -not $IsoPath -or $ImageIndex -le 0) {
-        if ($NoGui) { throw 'with -NoGui give -DiskNumber, -IsoPath and -ImageIndex' }
-        $sel = Show-Gui
-        if (-not $sel) { Say 'cancelled'; return }
-        $DiskNumber = $sel.Disk; $IsoPath = $sel.Iso; $ImageIndex = $sel.Index
-        $Yes = $true
-    }
+    if ($DiskNumber -lt 0 -or -not $IsoPath -or $ImageIndex -le 0) { throw 'with -NoGui give -DiskNumber, -IsoPath and -ImageIndex' }
     Invoke-Install $DiskNumber $IsoPath $ImageIndex
     $code = 0
 } catch {
@@ -486,5 +352,4 @@ try {
 } finally {
     Stop-Transcript | Out-Null
 }
-if (-not $NoGui) { Read-Host 'Press Enter to close' | Out-Null }
 exit $code

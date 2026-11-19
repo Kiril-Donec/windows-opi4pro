@@ -30,7 +30,7 @@ param(
     [switch]$AllowVirtualDisk,   # developer testing with an attached VHD(X)
     [switch]$TestSkipInstallImage, # developer testing: do not copy install.wim/esd
     [string]$ScreenshotPath,     # docs: save a picture of the window and exit
-    [ValidateSet('setup', 'progress')][string]$ScreenshotVariant = 'setup',
+    [ValidateSet('setup', 'progress', 'raw')][string]$ScreenshotVariant = 'setup',
     [ValidateSet('', 'en', 'ru')][string]$Language = '',   # window language; default: from Windows
     [string]$LogPath
 )

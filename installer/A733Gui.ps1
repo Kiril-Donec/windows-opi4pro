@@ -67,7 +67,8 @@ $script:GuiXaml = @'
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Width="760" SizeToContent="Height" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize"
-        Background="#F4F6F9" FontFamily="Segoe UI" FontSize="13" Foreground="#1F2937">
+        Background="#F4F6F9" FontFamily="Segoe UI" FontSize="13" Foreground="#1F2937"
+        UseLayoutRounding="True" SnapsToDevicePixels="True">
   <Window.Icon>
     <DrawingImage>
       <DrawingImage.Drawing>
@@ -213,7 +214,7 @@ $script:GuiXaml = @'
     </Style>
   </Window.Resources>
 
-  <StackPanel>
+  <StackPanel x:Name="Root" VerticalAlignment="Top">
     <Border Padding="26,18,22,18">
       <Border.Background>
         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
@@ -345,7 +346,7 @@ function Show-A733Gui {
     $reader = New-Object System.Xml.XmlNodeReader ([xml]$script:GuiXaml)
     $w = [Windows.Markup.XamlReader]::Load($reader)
     $ui = @{}
-    foreach ($n in 'HeadTitle', 'SubTitle', 'Badge', 'LangEn', 'LangRu', 'SetupPage', 'ProgressPage', 'WarnBold', 'WarnRest',
+    foreach ($n in 'Root', 'HeadTitle', 'SubTitle', 'Badge', 'LangEn', 'LangRu', 'SetupPage', 'ProgressPage', 'WarnBold', 'WarnRest',
                    'S1Title', 'S1Hint', 'RefreshBtn', 'DiskBox', 'S2Title', 'S2HintA', 'S2HintB', 'MsLink', 'FolderBtn', 'IsoBtn',
                    'SourceText', 'S3Title', 'S3Hint', 'EditionBox', 'Status', 'StartBtn', 'AgreeBox', 'AgreeText',
                    'ProgTitle', 'ProgSub', 'StepPanel', 'Bar', 'ProgText', 'DonePanel', 'DoneHead', 'DoneText',
@@ -555,10 +556,22 @@ function Show-A733Gui {
     })
 
     & $applyLang
+    # SizeToContent only for the first layout: when the content grows later (status line,
+    # progress page, details), WPF leaves the new strip at the bottom unpainted (black).
+    # So switch to a manual height and follow the content's size explicitly.
+    $st.Chrome = $null
+    $ui.Root.Add_SizeChanged({
+        if ($null -ne $st.Chrome) { $w.Height = [Math]::Ceiling($ui.Root.ActualHeight + $st.Chrome) }
+    })
     $w.Add_ContentRendered({
+        $st.Chrome = $w.ActualHeight - $ui.Root.ActualHeight
+        $w.SizeToContent = 'Manual'
+        $w.Height = [Math]::Ceiling($ui.Root.ActualHeight + $st.Chrome)
         & $fill
         if ($Screenshot) {
-            if ($script:GuiScreenshotVariant -eq 'progress') {
+            if ($script:GuiScreenshotVariant -eq 'raw') {
+                # as a user sees it right after start (no card: the status line appears)
+            } elseif ($script:GuiScreenshotVariant -eq 'progress') {
                 $st.Phase = 'run'; $st.Current = 5; $st.Pct = 62
                 $ui.SetupPage.Visibility = 'Collapsed'; $ui.ProgressPage.Visibility = 'Visible'
                 & $buildSteps; & $renderProgress

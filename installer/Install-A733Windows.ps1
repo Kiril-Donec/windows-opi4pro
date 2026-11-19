@@ -248,19 +248,27 @@ function Show-Gui {
     $f.Add_Shown({
         & $fill
         if ($ScreenshotPath) {
-            # copy from the screen so the Windows 11 frame is captured as users see it
+            # copy from the screen so the Windows 11 frame is captured as users see it,
+            # on a plain backdrop with a margin for the rounded corners and the shadow
+            $pad = 36
+            $b = $f.Bounds
+            $b.Inflate($pad, $pad)
+            $back = New-Object Windows.Forms.Form
+            $back.FormBorderStyle = 'None'; $back.StartPosition = 'Manual'; $back.ShowInTaskbar = $false
+            $back.BackColor = [Drawing.Color]::FromArgb(226, 232, 240)
+            $back.Bounds = $b
+            $back.Show()
             $f.TopMost = $true
             $f.Activate()
             $f.Refresh()
-            [Windows.Forms.Application]::DoEvents()
-            Start-Sleep -Milliseconds 700
-            $b = $f.Bounds
+            for ($i = 0; $i -lt 10; $i++) { [Windows.Forms.Application]::DoEvents(); Start-Sleep -Milliseconds 100 }
             $bmp = New-Object Drawing.Bitmap($b.Width, $b.Height)
             $g = [Drawing.Graphics]::FromImage($bmp)
             $g.CopyFromScreen($b.Location, [Drawing.Point]::Empty, $b.Size)
             $g.Dispose()
             $bmp.Save($ScreenshotPath, [Drawing.Imaging.ImageFormat]::Png)
             $bmp.Dispose()
+            $back.Close()
             $f.Close()
         }
     })

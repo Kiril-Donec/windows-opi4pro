@@ -19,17 +19,21 @@ Windows itself is **not** included: you download the official ISO from Microsoft
 
 ## What works
 
-| Part | Status |
-|---|---|
-| Boot: U-Boot → UEFI → Windows 11 ARM64 from the microSD card | works |
-| CPU: 8 cores, A76 at 1896 MHz, A55 at 1800 MHz | works (fixed clocks, no thermal throttling in Windows) |
-| RAM | works (tested on the 4 GB board) |
-| microSD | works: High Speed 50 MHz, ~20 MB/s read, ~10–13 MB/s write |
-| Ethernet (RJ45) | works (tested with a 100 Mbit/s link) |
-| HDMI | picture through the UEFI framebuffer (*Microsoft Basic Display Adapter*), **1024×600 for now** — Full HD is in progress |
-| USB keyboard / mouse | works on the **white USB port** under the blue one |
-| Restart / shut down | works |
-| GPU acceleration, audio, Wi-Fi / Bluetooth, USB 3.0, the right-hand USB ports, NPU, PCIe/NVMe, sleep | **not working** |
+| Part | Status | Details |
+|---|---|---|
+| Boot from microSD (U-Boot → UEFI → Windows 11 ARM64) | ✅ works | |
+| CPU, 8 cores | ⚠️ works | fixed clocks (A76 1896 MHz, A55 1800 MHz), no thermal throttling in Windows: use a fan or a heatsink |
+| RAM | ✅ works | tested on the 4 GB board |
+| microSD | ⚠️ works, slowly | ~20 MB/s read, ~10–13 MB/s write; the driver has no DMA yet, the system lags during disk activity |
+| Ethernet (RJ45) | ✅ works | tested at 100 Mbit/s, gigabit not tested |
+| HDMI | ⚠️ works | **1024×600 only** on any monitor (stretched), no resolution change; *Microsoft Basic Display Adapter* |
+| USB: white port under the blue one | ✅ works | keyboard, mouse |
+| USB: right-hand pair | ⚠️ unstable | devices come and go ("Device Descriptor Request Failed") |
+| USB: blue port (USB 3.0) | ❌ not working | devices are not detected |
+| Restart / shut down | ✅ works | the board powers off completely |
+| GPU acceleration | ❌ no | the CPU draws the desktop, video playback is poor |
+| Audio (HDMI and jack), Wi-Fi, Bluetooth | ❌ no | |
+| PCIe / NVMe, NPU, sleep and hibernation | ❌ no | |
 
 Windows runs in **test mode** (a watermark in the corner), because the A733 drivers are test-signed.
 

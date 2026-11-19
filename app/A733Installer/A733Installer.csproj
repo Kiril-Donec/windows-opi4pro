@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Orange Pi 4 Pro (A733) Windows SD installer: one .exe, .NET Framework 4.8
+       (built into Windows 10/11), payload (firmware, drivers, WinPE script) embedded. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>A733Installer</RootNamespace>
+    <AssemblyName>A733-Windows-Installer</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <Version>0.2.0</Version>
+    <Product>Windows 11 for Orange Pi 4 Pro - SD card installer</Product>
+    <Description>Prepares a microSD card that installs Windows 11 ARM64 on an Orange Pi 4 Pro (Allwinner A733)</Description>
+    <Copyright>Orange Pi 4 Pro A733 Windows port contributors, MIT license</Copyright>
+    <!-- no PDB / local paths inside the exe -->
+    <DebugType>none</DebugType>
+    <Deterministic>true</Deterministic>
+    <PathMap>$(MSBuildProjectDirectory)=A733Installer</PathMap>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <Reference Include="System.Management" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\firmware\opi4pro-a733-uefi-v60.img.gz" LogicalName="payload/firmware.img.gz" />
+    <EmbeddedResource Include="..\..\drivers\sd\*.*" LogicalName="payload/drivers/sd/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\drivers\ethernet\*.*" LogicalName="payload/drivers/ethernet/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\installer\winpe\install.cmd" LogicalName="payload/winpe/install.cmd" />
+    <EmbeddedResource Include="..\..\installer\winpe\winpeshl.ini" LogicalName="payload/winpe/winpeshl.ini" />
+  </ItemGroup>
+</Project>

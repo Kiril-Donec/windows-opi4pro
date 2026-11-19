@@ -1,0 +1,69 @@
+using System.Collections.Generic;
+
+namespace A733Installer
+{
+    static class Strings
+    {
+        public static readonly Dictionary<string, Dictionary<string, string>> Text = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["en"] = new Dictionary<string, string>
+            {
+                ["Title"] = "Windows 11 for Orange Pi 4 Pro",
+                ["Sub"] = "SD card installer  ·  Allwinner A733  ·  v{0}",
+                ["Badge"] = "EXPERIMENTAL",
+                ["WarnBold"] = "Everything on the selected card will be erased.",
+                ["WarnRest"] = " Windows runs slowly on an SD card: this is an experimental project.",
+                ["S1Title"] = "SD card", ["S1Hint"] = "32 GB or more, in a card reader of this PC", ["Refresh"] = "Refresh",
+                ["S2Title"] = "Windows 11 ARM64 image", ["S2HintA"] = "ISO from ", ["S2HintB"] = ", or a folder / USB drive with the extracted ISO",
+                ["Iso"] = "ISO...", ["Folder"] = "Folder...", ["NotSelected"] = "not selected", ["Reading"] = "reading the image...",
+                ["S3Title"] = "Edition", ["S3Hint"] = "Pro is recommended",
+                ["Agree"] = "I understand that the card will be erased",
+                ["Start"] = "Write card",
+                ["NoCard"] = "No SD card found (15 GB - 1 TB, card reader or USB). Insert the card and press Refresh.",
+                ["ImgErr"] = "Windows image: {0}",
+                ["NoArm"] = "no ARM64 Windows image here. Download \"Windows 11 (Arm64)\" from microsoft.com.",
+                ["FolderDesc"] = "Folder or USB drive with the extracted Windows 11 ARM64 ISO (contains sources\\install.wim)",
+                ["Confirm"] = "Erase this card and write Windows 11 ({0})?\n\n{1}", ["ConfirmTitle"] = "Confirm",
+                ["ProgTitle"] = "Writing the card...", ["ProgSub"] = "Do not remove the card. This takes 5-15 minutes.",
+                ["Step0"] = "Read the Windows image", ["Step1"] = "Prepare the installer (WinPE + A733 drivers)",
+                ["Step2"] = "Write boot firmware and partition table", ["Step3"] = "Format the card",
+                ["Step4"] = "Copy the installer boot files", ["Step5"] = "Copy the Windows image", ["Step6"] = "Final check",
+                ["Starting"] = "Starting...", ["Copying"] = "Copying the Windows image: {0:N0}%",
+                ["DoneTitle"] = "Done", ["DoneSub"] = "You can remove the card now.", ["DoneHead"] = "Card ready",
+                ["DoneText"] = "Put the card into the Orange Pi 4 Pro, connect HDMI, keyboard and mouse (white USB port under the blue one), optionally Ethernet, and power it on. The board installs Windows by itself in 20-60 minutes, then reboots into the Windows setup screens. Do not power it off meanwhile.",
+                ["FailTitle"] = "Failed", ["FailHead"] = "Something went wrong",
+                ["Details"] = "Details", ["OpenLog"] = "Open log file", ["Close"] = "Close",
+                ["StopQ"] = "The card is being written. Stopping now leaves it unusable (you can run the installer again).\n\nStop anyway?", ["StopTitle"] = "Stop?",
+            },
+            ["ru"] = new Dictionary<string, string>
+            {
+                ["Title"] = "Windows 11 для Orange Pi 4 Pro",
+                ["Sub"] = "Установщик на SD-карту  ·  Allwinner A733  ·  v{0}",
+                ["Badge"] = "ЭКСПЕРИМЕНТ",
+                ["WarnBold"] = "Всё на выбранной карте будет стёрто.",
+                ["WarnRest"] = " С SD-карты Windows работает медленно: это экспериментальный проект.",
+                ["S1Title"] = "SD-карта", ["S1Hint"] = "От 32 ГБ, в кардридере этого компьютера", ["Refresh"] = "Обновить",
+                ["S2Title"] = "Образ Windows 11 ARM64", ["S2HintA"] = "ISO с сайта ", ["S2HintB"] = " или папка / флешка с распакованным ISO",
+                ["Iso"] = "ISO...", ["Folder"] = "Папка...", ["NotSelected"] = "не выбран", ["Reading"] = "чтение образа...",
+                ["S3Title"] = "Редакция", ["S3Hint"] = "Рекомендуется Pro",
+                ["Agree"] = "Я понимаю, что карта будет стёрта",
+                ["Start"] = "Записать карту",
+                ["NoCard"] = "SD-карта не найдена (15 ГБ - 1 ТБ, кардридер или USB). Вставьте карту и нажмите «Обновить».",
+                ["ImgErr"] = "Образ Windows: {0}",
+                ["NoArm"] = "здесь нет образа Windows для ARM64. Скачайте «Windows 11 (Arm64)» с microsoft.com.",
+                ["FolderDesc"] = "Папка или флешка с распакованным ISO Windows 11 ARM64 (в ней есть sources\\install.wim)",
+                ["Confirm"] = "Стереть эту карту и записать Windows 11 ({0})?\n\n{1}", ["ConfirmTitle"] = "Подтверждение",
+                ["ProgTitle"] = "Запись карты...", ["ProgSub"] = "Не вынимайте карту. Это займёт 5-15 минут.",
+                ["Step0"] = "Чтение образа Windows", ["Step1"] = "Подготовка установщика (WinPE + драйверы A733)",
+                ["Step2"] = "Запись загрузчика и таблицы разделов", ["Step3"] = "Форматирование карты",
+                ["Step4"] = "Копирование загрузочных файлов", ["Step5"] = "Копирование образа Windows", ["Step6"] = "Финальная проверка",
+                ["Starting"] = "Запуск...", ["Copying"] = "Копирование образа Windows: {0:N0}%",
+                ["DoneTitle"] = "Готово", ["DoneSub"] = "Карту можно вынимать.", ["DoneHead"] = "Карта готова",
+                ["DoneText"] = "Вставьте карту в Orange Pi 4 Pro, подключите HDMI, клавиатуру и мышь (белый USB-порт под синим), по желанию Ethernet, и включите плату. Она сама установит Windows за 20-60 минут и перезагрузится в обычную настройку Windows. Не выключайте её в это время.",
+                ["FailTitle"] = "Не получилось", ["FailHead"] = "Что-то пошло не так",
+                ["Details"] = "Подробности", ["OpenLog"] = "Открыть лог", ["Close"] = "Закрыть",
+                ["StopQ"] = "Карта сейчас записывается. Если остановить, она будет непригодна (установщик можно запустить снова).\n\nОстановить?", ["StopTitle"] = "Остановить?",
+            },
+        };
+    }
+}

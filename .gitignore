@@ -6,3 +6,6 @@ src/drivers/*/package-*/
 src/drivers/*/*.zip
 *.pfx
 *.binlog
+app/*/bin/
+app/*/obj/
+*.user

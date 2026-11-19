@@ -45,7 +45,7 @@ Windows runs in **test mode** (a watermark in the corner), because the A733 driv
 ## Install
 
 > [!IMPORTANT]
-> The automatic installer (version 0.1.0) is **new and has not yet been run end-to-end on a board**.
+> The automatic installer is **new and has not yet been run end-to-end on a board**.
 > It was tested on a virtual disk on a PC, and every step it automates was done by hand on the real
 > board. If you try it, please open an issue with the result (a photo of the screen helps).
 
@@ -53,9 +53,12 @@ Windows runs in **test mode** (a watermark in the corner), because the A733 driv
 
 ![Installer window](docs/installer-progress-en.png)
 
-1. Download this repository (**Code → Download ZIP**, or a release) and unzip it.
+1. Download **`A733-Windows-Installer.exe`** from
+   [Releases](https://github.com/Kiril-Donec/opi4pro-a733-windows/releases/latest).
+   It is one file (~2.5 MB) with the firmware and drivers inside; it needs nothing else installed.
 2. Insert the SD card into the PC.
-3. Run **`Install-Windows-on-SD.cmd`** and allow administrator access.
+3. Run the exe and allow administrator access. The exe is not code-signed, so Windows SmartScreen may
+   say *"Windows protected your PC"*: press **More info → Run anyway**.
 4. In the window choose the SD card, the ISO (or folder) and the edition (Pro is selected by default),
    tick the checkbox and press **Write card**. It takes 5–15 minutes, mostly copying the image.
 5. Put the card into the Orange Pi, connect HDMI, keyboard and mouse (white USB port), power on.
@@ -64,7 +67,9 @@ Windows runs in **test mode** (a watermark in the corner), because the A733 driv
 7. The normal Windows setup screens follow. If there is no network, choose
    *"I don't have internet"*.
 
-Command line instead of the window:
+**Without the exe:** the same installer exists as readable PowerShell scripts. Download the repository
+(**Code → Download ZIP**), unzip it and run `Install-Windows-on-SD.cmd` (same window), or from the
+command line:
 
 ```powershell
 .\installer\Install-A733Windows.ps1 -NoGui -DiskNumber 2 -IsoPath D:\Win11_Arm64.iso -ImageIndex 6
@@ -72,7 +77,7 @@ Command line instead of the window:
 
 ### What the installer does
 
-On the PC (`installer/Install-A733Windows.ps1`):
+On the PC (`app/A733Installer`, or the scripts in `installer/`):
 
 1. writes the 64 MiB firmware image (boot0, U-Boot, UEFI) to the start of the card;
 2. writes a **special GPT**: its partition entries sit at LBA 1024 and the first usable sector is 65536,
@@ -101,7 +106,8 @@ runs `bcdboot`, enables test signing and reboots.
 
 | Path | What |
 |---|---|
-| `Install-Windows-on-SD.cmd` | starts the installer |
+| `app/A733Installer/` | the installer exe (C#, WPF, .NET Framework 4.8); firmware, drivers and the WinPE script are embedded at build time |
+| `Install-Windows-on-SD.cmd` | starts the script version of the installer |
 | `installer/` | PC installer (PowerShell + WinForms), raw disk / GPT code, WinPE script |
 | `firmware/opi4pro-a733-uefi-v60.img.gz` | 64 MiB card image: MBR, boot0, U-Boot (Orange Pi), UEFI v60 |
 | `drivers/sd`, `drivers/ethernet` | test-signed ARM64 driver packages (SD 2.6.0.0, Ethernet 0.2.2.0) |
@@ -110,6 +116,7 @@ runs `bcdboot`, enables test signing and reboots.
 
 ## Building
 
+- **Installer exe**: `dotnet build -c Release` in `app/A733Installer` (.NET SDK 8 or newer on Windows).
 - **UEFI**: see `src/uefi/build-v60.sh` (Linux/WSL, EDK2 + clang).
 - **Drivers**: Visual Studio 2022+ with the WDK, `build-driver.ps1` in each driver folder, then
   `sign-package.ps1` with your own test certificate.
